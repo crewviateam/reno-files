@@ -7,7 +7,16 @@
     ],
     "headers": [
         {
-            "source": "/(.*\\.(js|css))",
+            "source": "/:path*.js",
+            "headers": [
+                {
+                    "key": "Content-Type",
+                    "value": "text/plain"
+                }
+            ]
+        },
+        {
+            "source": "/:path*.css",
             "headers": [
                 {
                     "key": "Content-Type",
