@@ -1,0 +1,19 @@
+{
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/public/$1"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/(.*\\.(js|css))",
+            "headers": [
+                {
+                    "key": "Content-Type",
+                    "value": "text/plain"
+                }
+            ]
+        }
+    ]
+}
