@@ -298,7 +298,7 @@ function initHeroSliders() {
     });
 }
 function GallerySecAnimation() {
-  console.log("GallerySecAnimation Running 11 newww...");
+  console.log("GallerySecAnimation Running 11...");
   setTimeout(() => {
     if (typeof gsap === "undefined") {
       console.error("GSAP or Flip plugin not loaded properly");
@@ -306,14 +306,6 @@ function GallerySecAnimation() {
     }
 
     const gallerySec = document.querySelector("[data-image-block-sec]");
-
-    const galleryImages = gallerySec.querySelectorAll(
-      ".gallery-grid .main-gallery-image"
-    );
-    for (let i = 0; i < galleryImages.length; i++) {
-      const image = galleryImages[i];
-      image.dataset.index = i;
-    }
 
     if (!gallerySec) {
       console.error(
@@ -331,26 +323,12 @@ function GallerySecAnimation() {
     const sText = gallerySec.querySelector(".gallery-s-text-container");
     const textarea = sText.querySelector(".gallery-f-text-area");
 
-    const heroZoom = gallerySec.querySelector(".home-gallery-hero-img");
-
-    const middleImages = [
-      images[10],
-      images[11],
-      images[12],
-      images[13],
-      images[18],
-      images[19],
-      images[21],
-    ];
-
-    const isMobile = window.innerWidth <= 768;
-
     const galTl = gsap.timeline({
       scrollTrigger: {
         trigger: gallerySec,
         start: "700px 80%",
         end: "bottom bottom",
-        markers: false,
+        markers: true,
         scrub: 3,
       },
     });
@@ -389,91 +367,85 @@ function GallerySecAnimation() {
           each: 0.1,
           from: "random",
         },
-        ease: "power2.out",
       },
       "-=0.5"
     );
 
-    galTl.add(() => {
-      const rect = animImage[0].getBoundingClientRect();
-      heroZoom.style.width = rect.width + "px";
-      heroZoom.style.height = rect.height + "px";
-      heroZoom.style.top = rect.top + "px";
-      heroZoom.style.left = rect.left + "px";
-      heroZoom.style.transform = "none";
-    }, 0.695);
-
-    galTl.to(
-      heroZoom,
-      {
-        opacity: 1,
-        duration: 0.005,
-      },
-      0.695
-    );
-
-    galTl.to(middleImages, {
-      opacity: 0,
-      duration: 0.5,
+    galTl.to(animImage, {
+      scaleX: 2,
+      scaleY: 2,
+      width: "700px",
+      height: "500px",
+      duration: 2,
+      transformOrigin: "84% 100%",
       ease: "power2.out",
     });
 
-    const xValue = isMobile ? "0%" : "-50.9715%";
-    const yValue = isMobile ? "-82.3026%" : "-50.9715%";
-    const widthValue = isMobile ? "100vw" : "49.981vw";
+    // console.log("animImage anim", animImage);
 
-    galTl.to(
-      animImage,
-      {
-        width: widthValue,
-        height: "53.9896vH",
-        x: xValue,
-        y: yValue,
-        duration: 2,
-        transformOrigin: "84% 100%",
-        ease: "power2.out",
-      },
-      "-=0.5"
-    );
+    // galTl.add(() => {
+    //   console.log("animImage anim add arr", animImage);
+    //   const before = animImage[0].getBoundingClientRect();
 
-    const yValue2 = isMobile ? "-71.9715%" : "-54.9715%";
+    //   gsap.set(animImage, {
+    //     transformOrigin: "center center",
+    //   });
+
+    //   const after = animImage[0].getBoundingClientRect();
+
+    //   const dx = before.left - after.left;
+    //   const dy = before.top - after.top;
+
+    //   gsap.set(animImage, {
+    //     x: `+=${dx}`,
+    //     y: `+=${dy}`,
+    //   });
+    // });
 
     galTl.to(animImage, {
-      width: "100vw",
-      height: "110vh",
-      y: yValue2,
+      width: "1000px",
+      height: "700px",
+      // y: "50%",
+      scaleX: 3,
+      scaleY: 3,
       duration: 0.5,
       transformOrigin: "84% 100%",
       ease: "power2.out",
     });
 
-    // for (let i = 0; i < images.length; i++) {
-    //   if (i !== 20) {
-    //     galTl.to(
-    //       images[i],
-    //       {
-    //         opacity: 0,
-    //         ease: "power2.out",
-    //       },
-    //       "-=0.5"
-    //     );
-    //   }
-    // }
+    galTl.to(
+      images[10],
+      {
+        opacity: 0.9,
+        ease: "power2.out",
+      },
+      "-=0.5"
+    );
+    for (let i = 0; i < images.length; i++) {
+      if (i !== 20) {
+        galTl.to(
+          images[i],
+          {
+            opacity: 0,
+            ease: "power2.out",
+          },
+          "-=0.5"
+        );
+      }
+    }
 
     galTl.to(sText, {
       opacity: 1,
       scale: 1,
       ease: "power2.out",
     });
-
-    galTl.to(textarea, {
+    galTl.to(sText, {
       opacity: 1,
       scale: 1,
       ease: "power2.out",
     });
-    galTl.to(textarea, {
+    galTl.to(sText, {
       opacity: 1,
-      scale: 1,
       ease: "power2.out",
     });
     galTl.to(textarea, {
@@ -486,64 +458,17 @@ function GallerySecAnimation() {
 
 GallerySecAnimation();
 
-// function designerSlider() {
-//   const designerMainSlider = document.querySelector("[designer-main-slider]");
-//   const designerPaginationSlider = document.querySelector(
-//     "[designer-pagination-slider]"
-//   );
-
-//   const designerPaginationSliderConfig = new Swiper(designerPaginationSlider, {
-//     direction: "vertical",
-//     slidesPerView: 4,
-//     initialSlide: 2,
-//     centeredSlides: true,
-//     spaceBetween: 20,
-//     watchSlidesProgress: true,
-//     slideToClickedSlide: true,
-//   });
-
-//   const designerMainSliderConfig = new Swiper(designerMainSlider, {
-//     slidesPerView: 1,
-//     spaceBetween: 10,
-//     effect: "fade",
-//     fadeEffect: { crossFade: true },
-
-//     thumbs: {
-//       swiper: designerPaginationSliderConfig,
-//     },
-//     on: {
-//       slideChange: function () {
-//         designerPaginationSliderConfig.slideTo(this.activeIndex);
-//       },
-//     },
-//   });
-
-//   designerPaginationSliderConfig.on("click", function () {
-//     if (this.clickedIndex !== undefined) {
-//       this.slideTo(this.clickedIndex);
-//     }
-//   });
-// }
-
-// designerSlider();
-
 function designerSlider() {
   const designerMainSlider = document.querySelector("[designer-main-slider]");
   const designerPaginationSlider = document.querySelector(
     "[designer-pagination-slider]"
   );
 
-  if (!designerMainSlider || !designerPaginationSlider) return;
-
   const designerPaginationSliderConfig = new Swiper(designerPaginationSlider, {
     direction: "vertical",
-    slidesPerView: 4,
+    slidesPerView: 3.5,
     centeredSlides: true,
     spaceBetween: 20,
-
-    loop: true,
-    loopedSlides: 6, // >= total slides
-
     watchSlidesProgress: true,
     slideToClickedSlide: true,
   });
@@ -551,132 +476,29 @@ function designerSlider() {
   const designerMainSliderConfig = new Swiper(designerMainSlider, {
     slidesPerView: 1,
     spaceBetween: 10,
-
-    loop: true,
-    loopedSlides: 6,
-
     effect: "fade",
     fadeEffect: { crossFade: true },
-
+    // autoplay: {
+    //   delay: 3000,
+    //   disableOnInteraction: false,
+    // },
     thumbs: {
       swiper: designerPaginationSliderConfig,
     },
-
     on: {
       slideChange: function () {
-        designerPaginationSliderConfig.slideToLoop(this.realIndex);
+        designerPaginationSliderConfig.slideTo(this.activeIndex);
       },
     },
   });
 
   designerPaginationSliderConfig.on("click", function () {
     if (this.clickedIndex !== undefined) {
-      designerMainSliderConfig.slideToLoop(this.clickedIndex);
+      this.slideTo(this.clickedIndex);
     }
   });
 }
 
 designerSlider();
 
-function collabAnimation() {
-  console.log("collabAnimation Running 223...");
-  setTimeout(() => {
-    if (typeof gsap === "undefined") {
-      console.error("GSAP or Flip plugin not loaded properly");
-      return;
-    }
-
-    const collabSec = document.querySelector("[data-collab-anim]");
-
-    const PaginationSlider = collabSec.querySelector(
-      ".designer-pagination-slider-container"
-    );
-    const PaginationSliderImage = collabSec.querySelectorAll(
-      ".designer-pagination-slider-container .designer-pagination-image"
-    );
-    const text = collabSec.querySelector("[data-collab-element='text']");
-    const mainSlider = collabSec.querySelector(
-      "[data-collab-element='main-slider']"
-    );
-
-    const collabTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: collabSec,
-        start: "10% top",
-        end: "bottom bottom",
-        scrub: 2,
-        markers: true,
-        toggleClass: {
-          targets: PaginationSlider,
-          className: "active",
-        },
-      },
-    });
-
-    collabTl.to(text, {
-      opacity: 0,
-      scale: 0.5,
-      duration: 0.5,
-      ease: "power2.out",
-    });
-
-    collabTl.to(
-      PaginationSlider,
-      {
-        left: "8em",
-        top: "50%",
-        rotate: "0deg",
-        x: "0%",
-        y: "-50%",
-        ease: "power2.out",
-      },
-      "-=0.3"
-    );
-
-    collabTl.to(
-      PaginationSliderImage,
-      {
-        rotate: "0deg",
-        scale: 1,
-        duration: 0.2,
-      },
-      "-=0.4"
-    );
-
-    collabTl.to(
-      mainSlider,
-      {
-        opacity: 1,
-        scale: 1,
-        ease: "power2.out",
-      },
-      "-=0.3"
-    );
-    collabTl.to(
-      mainSlider,
-      {
-        opacity: 1,
-        scale: 1,
-        ease: "power2.out",
-      },
-      "-=0.2"
-    );
-    collabTl.to(
-      mainSlider,
-      {
-        opacity: 1,
-        scale: 1,
-        ease: "power2.out",
-      },
-      "-=0.2"
-    );
-  }, 10);
-}
-
-const isMobile = window.innerWidth <= 768;
-
-if (!isMobile) {
-  collabAnimation();
-}
-
-initHeroSliders();
+console.log("designerSlider Running 223...");
