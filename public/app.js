@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
         scrollTrigger: {
           id: "tabPaneTrigger_main",
           trigger: triggerEl,
-          start: "top top",
+          start: "top 120%",
           end: "bottom bottom",
           scrub: 0.5,
           invalidateOnRefresh: true,
