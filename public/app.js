@@ -96,15 +96,12 @@ document.addEventListener("DOMContentLoaded", () => {
              gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), { autoAlpha: 0 });
           },
           onRefresh: (self) => {
-             // On load/refresh, ensure visibility matches current scroll position relative to start
-             const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
+             // Hide slide 1 elements ONLY if we are currently above the start point
              if (self.progress === 0 && !self.isActive) {
-               gsap.set(slide1Elements, { autoAlpha: 0 });
-             } else if (self.isActive || self.progress > 0) {
-               // If we are already inside or past the section (e.g. refresh at bottom), 
-               // the timeline should handle individual alpha state, but container must be visible.
-               gsap.set(slide1Elements, { autoAlpha: 1 });
+                const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
+                gsap.set(slide1Elements, { autoAlpha: 0 });
              }
+             // Otherwise, let the scrubbed timeline handle the alpha states naturally based on its progress
           }
         }
       });
