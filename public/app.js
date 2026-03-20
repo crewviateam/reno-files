@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
           opacity: 0, visibility: "hidden"
         });
 
-        // Initial states for mobile app mockups (moved from original root/global calls)
+        // Initial states for mobile app mockups
         gsap.set(".mobile-app-container .mobile_mockup_image", {
           clearProps: "transform",
           yPercent: -150,
@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
           opacity: 0
         });
 
-        // Visibility toggle trigger (merged from latter part of file)
+        // Visibility toggle trigger
         ScrollTrigger.create({
           id: `tabPaneTrigger_visibility_${index}`,
           trigger: triggerEl,
@@ -226,22 +226,27 @@ document.addEventListener("DOMContentLoaded", () => {
     3. MENU CENTER ANIMATION
   ---------------------------------- */
   function initMenuCenterAnimation() {
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.id === "menuCenterTrigger") st.kill();
-    });
-
     const tabMenu = document.querySelector(".w-tab-menu");
     const tabSpaceDiv = document.querySelector(".tab-space-div");
 
     if (!tabMenu || !tabSpaceDiv) return;
+
+    // Kill old if exists
+    ScrollTrigger.getAll().forEach(st => {
+      if (st.vars.id === "menuCenterTrigger") st.kill();
+    });
+
+    // Reset styles to avoid jumps from previous state
+    gsap.set(tabMenu, { clearProps: "all" });
 
     const tabTl = gsap.timeline({
       scrollTrigger: {
         id: "menuCenterTrigger",
         trigger: tabSpaceDiv,
         start: "top bottom",
-        end: "200% bottom",
+        end: "bottom top", 
         scrub: 0.5,
+        invalidateOnRefresh: true,
       }
     });
 
@@ -253,7 +258,9 @@ document.addEventListener("DOMContentLoaded", () => {
       scale: 1.3,
       duration: 2,
       ease: "power2.inOut",
-      onComplete: () => tabMenu.classList.add("choose-text")
+      onStart: () => tabMenu.classList.remove("choose-text"),
+      onComplete: () => tabMenu.classList.add("choose-text"),
+      onReverseComplete: () => tabMenu.classList.remove("choose-text")
     })
     .to({}, { duration: 1.5 })
     .call(() => tabMenu.classList.remove("choose-text"))
@@ -346,29 +353,31 @@ document.addEventListener("DOMContentLoaded", () => {
     5. HERO HIDE ANIMATION
   ---------------------------------- */
   function initHeroHide() {
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.id === "heroHideTrigger") st.kill();
-    });
-
     const heroSection = document.querySelector(".app-hero_section");
     const tabSpaceDiv = document.querySelector(".tab-space-div");
 
     if (!heroSection || !tabSpaceDiv) return;
 
-    gsap.set(heroSection, { opacity: 1 });
+    // Kill old trigger if exists
+    ScrollTrigger.getAll().forEach(st => {
+      if (st.vars.id === "heroHideTrigger") st.kill();
+    });
 
-    ScrollTrigger.create({
-      id: "heroHideTrigger",
-      trigger: tabSpaceDiv,
-      start: "top bottom",
-      end: "top center",
-      scrub: 0.5,
-      onUpdate: (self) => {
-        gsap.to(heroSection, {
-          opacity: 1 - self.progress,
-          duration: 0.1,
-          overwrite: "auto"
-        });
+    // Reset opacity initially to ensure it's in a known state
+    // But ONLY if we can't trust the scrub to immediately set it. 
+    // gsap.set(heroSection, { opacity: 1 }); // Be careful with flicker
+
+    gsap.to(heroSection, {
+      opacity: 0,
+      ease: "none",
+      scrollTrigger: {
+        id: "heroHideTrigger",
+        trigger: tabSpaceDiv,
+        start: "top bottom",
+        end: "top center",
+        scrub: true,
+        invalidateOnRefresh: true,
+        overwrite: "auto"
       }
     });
   }
@@ -393,15 +402,10 @@ document.addEventListener("DOMContentLoaded", () => {
     tab.addEventListener("click", () => {
       // Small delay for Webflow's internal tab switching
       setTimeout(() => {
-        // Only refresh positions because elements might have changed from display:none to block
-        ScrollTrigger.refresh();
-        
-        // Some animations like PartnerTrack might need a bit more care if they use getBoundingClientRect
-        // but since we switched those to functional values inside the timeline, 
-        // a refresh (which triggers functional value re-evaluation) should be enough.
-        // If issues persist, we can re-call initPartnerTrackAnimation() here.
+        // Re-init specific components that depend on DOM layout
+        initAll();
       }, 500);
     });
   });
 
-});
+});
