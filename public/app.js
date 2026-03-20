@@ -50,9 +50,20 @@ document.addEventListener("DOMContentLoaded", () => {
         scale: 0, autoAlpha: 0, filter: "blur(0px)", overwrite: true
       });
       
-      // Force initial hidden state for all background images (excluding UI icons)
-      gsap.set(q(".re-imagine_image-wrap img:not(.app_icons_wrapper), .re-imagine_image-wrap .tab-section_content"), {
+      // Ensure the main wrap is visible so decorators stay visible
+      gsap.set(q(".re-imagine_image-wrap"), { autoAlpha: 1, overwrite: true });
+
+      // Initial state: hide ONLY the elements that are meant to enter at the trigger point
+      // Slide 1 elements:
+      gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), {
         autoAlpha: 0, overwrite: true
+      });
+      // Slide 2 & 3 elements (already scale 0/alpha 0 but reinforce):
+      gsap.set(q(".tab_imagine_content_wrapper.is-02, .tab_imagine_content_wrapper.is-03"), {
+        autoAlpha: 0, overwrite: true
+      });
+      gsap.set(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7, .re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
+        autoAlpha: 0, scale: 0, filter: "blur(0px)", overwrite: true
       });
 
       // Fixed initial states for mobile app mockups (Scoped)
@@ -77,18 +88,20 @@ document.addEventListener("DOMContentLoaded", () => {
           invalidateOnRefresh: true,
           fastScrollEnd: true,
           onUpdate: (self) => {
-             // Highly reactive toggle for the container visibility, bypasses scrub delay
+             // Precise toggle for Slide 1 elements to match entry/exit points without a lag
+             const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
              if (self.isActive || self.progress > 0) {
-               gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
+               gsap.set(slide1Elements, { autoAlpha: 1 });
              } else {
-               gsap.set(q(".re-imagine_image-wrap img:not(.app_icons_wrapper), .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
+               gsap.set(slide1Elements, { autoAlpha: 0 });
              }
           },
           onRefresh: (self) => {
+             const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
              if (self.isActive || self.progress > 0) {
-               gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
+               gsap.set(slide1Elements, { autoAlpha: 1 });
              } else {
-               gsap.set(q(".re-imagine_image-wrap img:not(.app_icons_wrapper), .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
+               gsap.set(slide1Elements, { autoAlpha: 0 });
              }
           }
         }
