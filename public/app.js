@@ -309,55 +309,67 @@ document.addEventListener("DOMContentLoaded", () => {
   
   const tabMenu = document.querySelector(".w-tab-menu");
   const tabSpaceDiv = document.querySelector(".tab-space-div");
+
+  if (!tabMenu || !tabSpaceDiv) return;
   
   const tabTl = gsap.timeline({
-      scrollTrigger: {
-          trigger: tabSpaceDiv,
-          start: "top bottom",
-          end: "200% bottom",
-          scrub: 0.5,
-          markers: true,
-      }
+    scrollTrigger: {
+      trigger: tabSpaceDiv,
+      start: "top bottom",
+      end: "200% bottom",
+      scrub: 0.5,
+      markers: true,
+    }
   });
 
+  // 🔥 DIAGONAL MOVE TO CENTER
   tabTl.to(tabMenu, {
-      left: "50%",
-      xPercent: -50,
-      duration: 2,
-      ease: "power2.inOut",
+    left: "50%",
+    bottom: "50%",
+    xPercent: -50,
+    yPercent: -50,
+    scale: 1.3,
+    duration: 2,
+    ease: "power2.inOut",
+
+    // ✅ ADD CLASS when reaching center
+    onComplete: () => {
+      tabMenu.classList.add("choose-text");
+    }
   });
-  tabTl.to(tabMenu, {
-      bottom: "50%",
-      yPercent: -50,
-      duration: 1,
-      ease: "power2.inOut",
-  });
-  tabTl.to(tabMenu, {
-      scale: 1.3,
-      duration: 1,
-      ease: "power2.inOut",
-  });
+
+  // 🔥 HOLD
   tabTl.to({}, { duration: 1.5 });
-  tabTl.to(tabMenu, {
-      bottom: "5%",
-      yPercent: 0,
-      duration: 1,
-      ease: "power2.inOut",
-  });
-  tabTl.to(tabMenu, {
-      scale: 1,
-      duration: 1,
-      ease: "power2.inOut",
-  }, "-=0.5");
-  // tabTl.to(tabMenu, {
-  //     left: "50%",
-  //     xPercent: -50,
-  //     duration: 1,
-  //     ease: "power2.inOut",
-  // });
 
-  
-});
+  // ❌ REMOVE CLASS before exit
+  tabTl.call(() => {
+    tabMenu.classList.remove("choose-text");
+  });
+
+  // 🔥 HIDE
+  tabTl.to(tabMenu, {
+    opacity: 0,
+    duration: 0.3,
+    ease: "power1.out"
+  });
+
+  // 🔥 JUMP TO BOTTOM CENTER
+  tabTl.set(tabMenu, {
+    bottom: "5%",
+    left: "50%",
+    xPercent: -50,
+    yPercent: 0,
+    scale: 1
+  });
+
+  // 🔥 SHOW AGAIN
+  tabTl.to(tabMenu, {
+    opacity: 1,
+    duration: 0.4,
+    ease: "power2.out"
+  });
+
+});husain-amjhera14
 
 
 
