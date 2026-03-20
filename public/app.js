@@ -76,16 +76,15 @@ document.addEventListener("DOMContentLoaded", () => {
           scrub: 0.5,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
-          onRefresh: (self) => {
-             // On refresh, check if we are already past the start point
+          onUpdate: (self) => {
+             // Highly reactive toggle for the container visibility, bypasses scrub delay
              if (self.isActive || self.progress > 0) {
                gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
              } else {
                gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
              }
           },
-          onToggle: (self) => {
-             // Ensure elements are hidden when scrolling back up past the start
+          onRefresh: (self) => {
              if (self.isActive || self.progress > 0) {
                gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
              } else {
@@ -95,10 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // 0. Initial base visibility
-      mainTL.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-        autoAlpha: 1
-      }, 0);
+      // 0. Initial base visibility is now handled by ScrollTrigger callbacks to stay reactive
 
       // BATCH 1: OUT
       mainTL.to(q(".tab_imagine_content_wrapper.is-01"), {
