@@ -46,17 +46,12 @@ document.addEventListener("DOMContentLoaded", () => {
         q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3"),
         { scale: 1, autoAlpha: 1, yPercent: 0, filter: "blur(0px)", overwrite: true }
       );
-      gsap.set(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7, .re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
-        scale: 0, autoAlpha: 0, filter: "blur(0px)", overwrite: true
-      });
-      
-      // Ensure the main wrap is visible so decorators stay visible
+      // Ensure the main wrap and decorators stay visible
       gsap.set(q(".re-imagine_image-wrap"), { autoAlpha: 1, overwrite: true });
 
-      // Initial state: Set Slide 1 elements to 1 so the scrubbed timeline shows them by default.
-      // They will be hidden reactively by the onRefresh/onLeaveBack callbacks if we are above the section.
+      // Initial state: Elements start hidden and are brought in by the timeline at time 0
       gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), {
-        autoAlpha: 1, overwrite: true
+        autoAlpha: 0, overwrite: true
       });
       // Slide 2 & 3 elements (already scale 0/alpha 0 but reinforce):
       gsap.set(q(".tab_imagine_content_wrapper.is-02, .tab_imagine_content_wrapper.is-03"), {
@@ -87,26 +82,25 @@ document.addEventListener("DOMContentLoaded", () => {
           scrub: 0.5,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
-          onEnter: () => {
-             // Show slide 1 elements immediately when entering from the top
-             gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), { autoAlpha: 1 });
-          },
           onLeaveBack: () => {
              // Responsive hide when scrolling back up past the start point
              gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), { autoAlpha: 0 });
           },
           onRefresh: (self) => {
-             // Hide slide 1 elements ONLY if we are currently above the start point
+             // Final hide check for the 'above' state on refresh
              if (self.progress === 0 && !self.isActive) {
-                const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
-                gsap.set(slide1Elements, { autoAlpha: 0 });
+               gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), { autoAlpha: 0 });
              }
-             // Otherwise, let the scrubbed timeline handle the alpha states naturally based on its progress
           }
         }
       });
 
-      // 0. Initial base visibility is now handled by ScrollTrigger callbacks to stay reactive
+      // 0. Synchronized entry for Slide 1 (prevents 'stuck' blur/scale issues)
+      mainTL.fromTo(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), 
+        { autoAlpha: 0 },
+        { autoAlpha: 1, duration: 0.1 },
+        0
+      );
 
       // BATCH 1: OUT
       mainTL.to(q(".tab_imagine_content_wrapper.is-01"), {
