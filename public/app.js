@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const q = gsap.utils.selector(activePane);
     
+    // Check for fixed height section or sticky elements
     const hasFixedHeight = q(".tab-section_fixed_height").length > 0;
     const hasSticky = q("[el-sticky]").length > 0;
 
@@ -49,12 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
         scale: 0, autoAlpha: 0, filter: "blur(0px)", overwrite: true
       });
       
-      // Image wrap content
+      // Force whole container visibility reset
       gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
         autoAlpha: 0, overwrite: true
       });
 
-      // Mobile app mockups (Scoped)
+      // Fixed initial states for mobile app mockups (Scoped)
       gsap.set(q(".mobile-app-container .mobile_mockup_image"), {
         yPercent: -150,
         autoAlpha: 0,
@@ -66,23 +67,22 @@ document.addEventListener("DOMContentLoaded", () => {
         overwrite: true
       });
 
-      // Visibility toggle
+      // Improved Visibility toggle: Ensured visibility whenever user is in the section
       ScrollTrigger.create({
         id: "tabPaneTrigger_visibility",
         trigger: triggerEl,
         start: "top 80%",
-        onEnter: () => {
+        end: "bottom 20%",
+        onToggle: (self) => {
           gsap.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-            autoAlpha: 1, duration: 0.4, ease: "power1.out", overwrite: "auto"
-          });
-        },
-        onLeaveBack: () => {
-          gsap.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-            autoAlpha: 0, duration: 0.3, ease: "power1.in", overwrite: "auto"
+            autoAlpha: self.isActive ? 1 : 0,
+            duration: 0.4,
+            ease: "power1.out",
+            overwrite: "auto"
           });
         },
         onRefresh: (self) => {
-          if (self.progress > 0) {
+          if (self.isActive) {
             gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
           }
         }
@@ -167,6 +167,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }).to(q(".mobile-app-container .mobile_mocup_content"), {
         yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
       }, "-=0.5");
+      
+      // FINAL HIDE: Ensure background images are gone when the section is finished
+      mainTL.to(q(".re-imagine_image-wrap img"), { autoAlpha: 0, duration: 0.3 }, "+=0.1");
     }
 
     /* Part B: Sticky Animation */
@@ -369,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function initAll() {
     // 1. Kill EVERY ScrollTrigger to start fresh
     ScrollTrigger.getAll().forEach(st => st.kill());
-
+    
     // 2. Find the Active Tab Pane
     const activePane = document.querySelector(".w-tab-pane.w--tab-active");
     if (activePane) {
@@ -384,7 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // A. Global Utilities (Run once on load)
-  setupAedSigns();
+  setTimeout(setupAedSigns, 100);
 
   // B. Initial call with delay
   setTimeout(initAll, 200);
@@ -394,7 +397,7 @@ document.addEventListener("DOMContentLoaded", () => {
   tabLinks.forEach(tab => {
     tab.addEventListener("click", () => {
       // Longer delay for tab switch
-      setTimeout(initAll, 700);
+      setTimeout(initAll, 800);
     });
   });
 
