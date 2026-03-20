@@ -1,13 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
   gsap.registerPlugin(ScrollTrigger);
 
-  // 1. UTILITIES (Restored working AED sign logic)
+  // 1. UTILITIES (Idempotent AED sign logic)
   function setupAedSigns() {
     const elements = document.querySelectorAll(
       ".pay-later_calc_range_wrap .u-flex-horizontal-nowrap p.u-opacity-70"
     );
 
     elements.forEach((el) => {
+      // Avoid duplicate wrapping by checking if already wrapped
+      if (el.querySelector(".aed-sign")) return;
+      
       // Replace only standalone AED text (case-insensitive)
       el.innerHTML = el.innerHTML.replace(
         /\bAED\b/gi,
@@ -24,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const q = gsap.utils.selector(activePane);
     
-    // Check for fixed height section or sticky elements
     const hasFixedHeight = q(".tab-section_fixed_height").length > 0;
     const hasSticky = q("[el-sticky]").length > 0;
 
@@ -34,35 +36,37 @@ document.addEventListener("DOMContentLoaded", () => {
     if (hasFixedHeight) {
       const triggerEl = q(".tab-section_fixed_height")[0];
 
-      // Reset states
-      gsap.set(q(".tab_imagine_content_wrapper.is-01"), { yPercent: 0, autoAlpha: 1 });
+      // Reset states with explicit overwrite to prevent conflicts
+      gsap.set(q(".tab_imagine_content_wrapper.is-01"), { yPercent: 0, autoAlpha: 1, overwrite: true });
       gsap.set(q(".tab_imagine_content_wrapper.is-02, .tab_imagine_content_wrapper.is-03"), {
-        yPercent: 100, autoAlpha: 0
+        yPercent: 100, autoAlpha: 0, overwrite: true
       });
       gsap.set(
         q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3"),
-        { scale: 1, autoAlpha: 1, yPercent: 0, filter: "blur(0px)" }
+        { scale: 1, autoAlpha: 1, yPercent: 0, filter: "blur(0px)", overwrite: true }
       );
       gsap.set(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7, .re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
-        scale: 0, autoAlpha: 0, filter: "blur(0px)"
+        scale: 0, autoAlpha: 0, filter: "blur(0px)", overwrite: true
       });
       
-      // Initial visibility for wraps
+      // Image wrap content
       gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-        autoAlpha: 0
+        autoAlpha: 0, overwrite: true
       });
 
-      // Fixed initial states for mobile app mockups (Scoped)
+      // Mobile app mockups (Scoped)
       gsap.set(q(".mobile-app-container .mobile_mockup_image"), {
         yPercent: -150,
-        autoAlpha: 0
+        autoAlpha: 0,
+        overwrite: true
       });
       gsap.set(q(".mobile-app-container .mobile_mocup_content"), {
         yPercent: 150,
-        autoAlpha: 0
+        autoAlpha: 0,
+        overwrite: true
       });
 
-      // Improved Visibility toggle
+      // Visibility toggle
       ScrollTrigger.create({
         id: "tabPaneTrigger_visibility",
         trigger: triggerEl,
@@ -78,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         },
         onRefresh: (self) => {
-          // If we are already past the trigger point, make sure it's visible
           if (self.progress > 0) {
             gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
           }
@@ -173,14 +176,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const bgItems = q(".tabs_flex_img");
       const triggers = q("[el-trigger]");
 
-      gsap.set(leftItems, { zIndex: 50, autoAlpha: 0, yPercent: 100 });
-      gsap.set(centerItems, { zIndex: 50, autoAlpha: 0, yPercent: 100 });
-      gsap.set(bgItems, { zIndex: 1, autoAlpha: 0, scale: 1.5 });
+      gsap.set(leftItems, { zIndex: 50, autoAlpha: 0, yPercent: 100, overwrite: true });
+      gsap.set(centerItems, { zIndex: 50, autoAlpha: 0, yPercent: 100, overwrite: true });
+      gsap.set(bgItems, { zIndex: 1, autoAlpha: 0, scale: 1.5, overwrite: true });
 
       if (leftItems[0]) {
-        gsap.set(leftItems[0], { autoAlpha: 1, yPercent: 0 });
-        gsap.set(centerItems[0], { autoAlpha: 1, yPercent: 0 });
-        gsap.set(bgItems[0], { autoAlpha: 1, scale: 1, zIndex: 2 });
+        gsap.set(leftItems[0], { autoAlpha: 1, yPercent: 0, overwrite: true });
+        gsap.set(centerItems[0], { autoAlpha: 1, yPercent: 0, overwrite: true });
+        gsap.set(bgItems[0], { autoAlpha: 1, scale: 1, zIndex: 2, overwrite: true });
       }
 
       triggers.forEach((trigger, i) => {
@@ -366,11 +369,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function initAll() {
     // 1. Kill EVERY ScrollTrigger to start fresh
     ScrollTrigger.getAll().forEach(st => st.kill());
-    
-    // 2. Global Utilities
-    setupAedSigns();
 
-    // 3. Find the Active Tab Pane
+    // 2. Find the Active Tab Pane
     const activePane = document.querySelector(".w-tab-pane.w--tab-active");
     if (activePane) {
       initTabPaneAnimations(activePane);
@@ -379,19 +379,22 @@ document.addEventListener("DOMContentLoaded", () => {
       initHeroHide(activePane);
     }
     
-    // 4. Final refresh to ensure everything is measured correctly
+    // 3. Final refresh to ensure everything is measured correctly
     ScrollTrigger.refresh();
   }
 
-  // Use a slight delay for initial load
-  setTimeout(initAll, 150);
+  // A. Global Utilities (Run once on load)
+  setupAedSigns();
+
+  // B. Initial call with delay
+  setTimeout(initAll, 200);
 
   // --- TAB CHANGE HANDLING ---
   const tabLinks = document.querySelectorAll(".w-tab-link");
   tabLinks.forEach(tab => {
     tab.addEventListener("click", () => {
-      // Longer delay for tab switch to ensure the new pane is actually visible in layout
-      setTimeout(initAll, 650);
+      // Longer delay for tab switch
+      setTimeout(initAll, 700);
     });
   });
 
