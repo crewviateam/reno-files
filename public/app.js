@@ -1,11 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   gsap.registerPlugin(ScrollTrigger);
 
-  // 1. UTILITIES
+  // 1. UTILITIES (Restored working AED sign logic)
   function setupAedSigns() {
     const elements = document.querySelectorAll(
       ".pay-later_calc_range_wrap .u-flex-horizontal-nowrap p.u-opacity-70"
     );
+
     elements.forEach((el) => {
       // Replace only standalone AED text (case-insensitive)
       el.innerHTML = el.innerHTML.replace(
@@ -34,47 +35,53 @@ document.addEventListener("DOMContentLoaded", () => {
       const triggerEl = q(".tab-section_fixed_height")[0];
 
       // Reset states
-      gsap.set(q(".tab_imagine_content_wrapper.is-01"), { yPercent: 0, opacity: 1 });
+      gsap.set(q(".tab_imagine_content_wrapper.is-01"), { yPercent: 0, autoAlpha: 1 });
       gsap.set(q(".tab_imagine_content_wrapper.is-02, .tab_imagine_content_wrapper.is-03"), {
-        yPercent: 100, opacity: 0
+        yPercent: 100, autoAlpha: 0
       });
       gsap.set(
         q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3"),
-        { scale: 1, opacity: 1, yPercent: 0, filter: "blur(0px)" }
+        { scale: 1, autoAlpha: 1, yPercent: 0, filter: "blur(0px)" }
       );
       gsap.set(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7, .re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
-        scale: 0, opacity: 0, filter: "blur(0px)"
+        scale: 0, autoAlpha: 0, filter: "blur(0px)"
       });
       
-      // Reset image wrap content
+      // Initial visibility for wraps
       gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-        opacity: 0, visibility: "hidden"
+        autoAlpha: 0
       });
 
       // Fixed initial states for mobile app mockups (Scoped)
       gsap.set(q(".mobile-app-container .mobile_mockup_image"), {
         yPercent: -150,
-        opacity: 0
+        autoAlpha: 0
       });
       gsap.set(q(".mobile-app-container .mobile_mocup_content"), {
         yPercent: 150,
-        opacity: 0
+        autoAlpha: 0
       });
 
-      // Visibility toggle trigger
+      // Improved Visibility toggle
       ScrollTrigger.create({
         id: "tabPaneTrigger_visibility",
         trigger: triggerEl,
         start: "top 80%",
         onEnter: () => {
           gsap.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-            opacity: 1, visibility: "visible", duration: 0.4, ease: "power1.out"
+            autoAlpha: 1, duration: 0.4, ease: "power1.out", overwrite: "auto"
           });
         },
         onLeaveBack: () => {
           gsap.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-            opacity: 0, visibility: "hidden", duration: 0.3, ease: "power1.in"
+            autoAlpha: 0, duration: 0.3, ease: "power1.in", overwrite: "auto"
           });
+        },
+        onRefresh: (self) => {
+          // If we are already past the trigger point, make sure it's visible
+          if (self.progress > 0) {
+            gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
+          }
         }
       });
 
@@ -97,47 +104,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // BATCH 1: OUT
       mainTL.to(q(".tab_imagine_content_wrapper.is-01"), {
-        yPercent: -100, opacity: 0, ease: "power2.in", duration: durationPerTransition
+        yPercent: -100, autoAlpha: 0, ease: "power2.in", duration: durationPerTransition
       }, 0.5);
 
       mainTL.to(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3"), {
-        scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.15, ease: "power2.in", duration: durationPerTransition
+        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.15, ease: "power2.in", duration: durationPerTransition
       }, 1.5);
 
       // BATCH 2: IN & OUT
       mainTL.fromTo(q(".tab_imagine_content_wrapper.is-02"), 
-        { yPercent: 100, opacity: 0 },
-        { yPercent: 0, opacity: 1, ease: "power2.out", duration: durationPerTransition },
+        { yPercent: 100, autoAlpha: 0 },
+        { yPercent: 0, autoAlpha: 1, ease: "power2.out", duration: durationPerTransition },
         batch2StartTime
       )
       .fromTo(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7"),
-        { scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
+        { scale: 0, autoAlpha: 0 },
+        { scale: 1, autoAlpha: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
         batch2StartTime + staggerDuration
       )
       .to(q(".tab_imagine_content_wrapper.is-02"), {
-        yPercent: -100, opacity: 0, ease: "power2.in", duration: durationPerTransition
+        yPercent: -100, autoAlpha: 0, ease: "power2.in", duration: durationPerTransition
       }, batch2StartTime + 2.0)
       .to(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7"), {
-        scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
+        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
       }, batch2StartTime + 2.2);
 
       // BATCH 3: IN & OUT
       mainTL.fromTo(q(".tab_imagine_content_wrapper.is-03"),
-        { yPercent: 100, opacity: 0 },
-        { yPercent: 0, opacity: 1, ease: "power2.out", duration: durationPerTransition },
+        { yPercent: 100, autoAlpha: 0 },
+        { yPercent: 0, autoAlpha: 1, ease: "power2.out", duration: durationPerTransition },
         batch3StartTime
       )
       .fromTo(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"),
-        { scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
+        { scale: 0, autoAlpha: 0 },
+        { scale: 1, autoAlpha: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
         batch3StartTime + staggerDuration
       )
       .to(q(".tab_imagine_content_wrapper.is-03"), {
-        yPercent: -100, opacity: 0, duration: durationPerTransition, ease: "power2.inOut"
+        yPercent: -100, autoAlpha: 0, duration: durationPerTransition, ease: "power2.inOut"
       }, batch3StartTime + 2.2)
       .to(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
-        scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
+        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
       }, batch3StartTime + 2.2);
 
       // Parallax
@@ -153,9 +160,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       mainTL.to(q(".mobile-app-container .mobile_mockup_image"), {
-        yPercent: 0, opacity: 1, duration: 1, ease: "power2.inOut"
+        yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
       }).to(q(".mobile-app-container .mobile_mocup_content"), {
-        yPercent: 0, opacity: 1, duration: 1, ease: "power2.inOut"
+        yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
       }, "-=0.5");
     }
 
@@ -252,9 +259,9 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .to({}, { duration: 1.5 })
     .call(() => tabMenu.classList.remove("choose-text"))
-    .to(tabMenu, { opacity: 0, duration: 0.3, ease: "power1.out" })
+    .to(tabMenu, { autoAlpha: 0, duration: 0.3, ease: "power1.out" })
     .set(tabMenu, { bottom: "5%", left: "50%", xPercent: -50, yPercent: 0, scale: 1 })
-    .to(tabMenu, { opacity: 1, duration: 0.4, ease: "power2.out" });
+    .to(tabMenu, { autoAlpha: 1, duration: 0.4, ease: "power2.out" });
   }
 
   /* ----------------------------------
@@ -307,13 +314,13 @@ document.addEventListener("DOMContentLoaded", () => {
              const imgCenterY = rect.top + rect.height / 2 - sectionRect.top;
              return centerY - imgCenterY;
           },
-          opacity: 1,
+          autoAlpha: 1,
           scale: 1,
           duration: 2,
           ease: "none"
         });
 
-        tl.to(card, { opacity: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+        tl.to(card, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
         tl.to(colLogo, { clipPath: `inset(0% ${prcnt}% 0% 0%)`, duration: 1, ease: "power2.out" }, "-=0.4");
       };
 
@@ -322,11 +329,11 @@ document.addEventListener("DOMContentLoaded", () => {
         timelineRender(idx, percentages[i]);
       });
 
-      tl.to(partnerText, { opacity: 0, duration: 0.5, ease: "power2.out" })
+      tl.to(partnerText, { autoAlpha: 0, duration: 0.5, ease: "power2.out" })
         .to(partnerRLogo, { yPercent: -100, scale: 1.2, duration: 0.5, ease: "power2.out" })
-        .to(partnerRLogo, { opacity: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
-        .to(colorLogoImg, { opacity: 1, scale: 1.5, transformOrigin: "bottom center" })
-        .to(colorLogoContent, { opacity: 1, yPercent: 0, duration: 0.5, ease: "power2.out" });
+        .to(partnerRLogo, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
+        .to(colorLogoImg, { autoAlpha: 1, scale: 1.5, transformOrigin: "bottom center" })
+        .to(colorLogoContent, { autoAlpha: 1, yPercent: 0, duration: 0.5, ease: "power2.out" });
     });
   }
 
@@ -341,7 +348,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!heroSection || !tabSpaceDiv) return;
 
     gsap.to(heroSection, {
-      opacity: 0,
+      autoAlpha: 0,
       ease: "none",
       scrollTrigger: {
         id: "heroHideTrigger",
@@ -376,18 +383,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ScrollTrigger.refresh();
   }
 
-  // Wait a small bit for the browser to restore scroll position and finish layout
-  setTimeout(() => {
-    initAll();
-  }, 100);
+  // Use a slight delay for initial load
+  setTimeout(initAll, 150);
 
   // --- TAB CHANGE HANDLING ---
   const tabLinks = document.querySelectorAll(".w-tab-link");
   tabLinks.forEach(tab => {
     tab.addEventListener("click", () => {
-      setTimeout(() => {
-        initAll();
-      }, 500);
+      // Longer delay for tab switch to ensure the new pane is actually visible in layout
+      setTimeout(initAll, 650);
     });
   });
 
