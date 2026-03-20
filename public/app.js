@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         autoAlpha: 0, overwrite: true
       });
 
-      // Mobile app mockups (Scoped)
+      // Fixed initial states for mobile app mockups (Scoped)
       gsap.set(q(".mobile-app-container .mobile_mockup_image"), {
         yPercent: -150,
         autoAlpha: 0,
@@ -87,11 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      const batch2StartTime = 3.0;
-      const batch3StartTime = 6.0;
-      const durationPerTransition = 1.0;
-      const staggerDuration = 0.5;
-
       // 0. Initial visibility (within the timeline)
       mainTL.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
         autoAlpha: 1, duration: 0.1
@@ -99,48 +94,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // BATCH 1: OUT
       mainTL.to(q(".tab_imagine_content_wrapper.is-01"), {
-        yPercent: -100, autoAlpha: 0, ease: "power2.in", duration: durationPerTransition
+        yPercent: -100, autoAlpha: 0, ease: "power2.in", duration: 1
       }, 0.5);
 
       mainTL.to(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3"), {
-        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.15, ease: "power2.in", duration: durationPerTransition
+        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.15, ease: "power2.in", duration: 1
       }, 1.5);
 
       // BATCH 2: IN & OUT
       mainTL.fromTo(q(".tab_imagine_content_wrapper.is-02"), 
         { yPercent: 100, autoAlpha: 0 },
-        { yPercent: 0, autoAlpha: 1, ease: "power2.out", duration: durationPerTransition },
-        batch2StartTime
+        { yPercent: 0, autoAlpha: 1, ease: "power2.out", duration: 1 },
+        3.0
       )
       .fromTo(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7"),
         { scale: 0, autoAlpha: 0 },
-        { scale: 1, autoAlpha: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
-        batch2StartTime + staggerDuration
+        { scale: 1, autoAlpha: 1, stagger: 0.15, ease: "power2.out", duration: 1 },
+        3.5
       )
       .to(q(".tab_imagine_content_wrapper.is-02"), {
-        yPercent: -100, autoAlpha: 0, ease: "power2.in", duration: durationPerTransition
-      }, batch2StartTime + 2.0)
+        yPercent: -100, autoAlpha: 0, ease: "power2.in", duration: 1
+      }, 5.0)
       .to(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7"), {
-        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
-      }, batch2StartTime + 2.2);
+        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: 1
+      }, 5.2);
 
       // BATCH 3: IN & OUT
       mainTL.fromTo(q(".tab_imagine_content_wrapper.is-03"),
         { yPercent: 100, autoAlpha: 0 },
-        { yPercent: 0, autoAlpha: 1, ease: "power2.out", duration: durationPerTransition },
-        batch3StartTime
+        { yPercent: 0, autoAlpha: 1, ease: "power2.out", duration: 1 },
+        6.0
       )
       .fromTo(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"),
         { scale: 0, autoAlpha: 0 },
-        { scale: 1, autoAlpha: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
-        batch3StartTime + staggerDuration
+        { scale: 1, autoAlpha: 1, stagger: 0.15, ease: "power2.out", duration: 1 },
+        6.5
       )
       .to(q(".tab_imagine_content_wrapper.is-03"), {
-        yPercent: -100, autoAlpha: 0, duration: durationPerTransition, ease: "power2.inOut"
-      }, batch3StartTime + 2.2)
+        yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut"
+      }, 8.2)
       .to(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
-        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
-      }, batch3StartTime + 2.2);
+        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: 1
+      }, 8.2);
 
       // Parallax
       q(".re-imagine_image-wrap img").forEach((img, i) => {
@@ -173,15 +168,30 @@ document.addEventListener("DOMContentLoaded", () => {
       const bgItems = q(".tabs_flex_img");
       const triggers = q("[el-trigger]");
 
+      // Initial reset for all
       gsap.set(leftItems, { zIndex: 50, autoAlpha: 0, yPercent: 100, overwrite: true });
       gsap.set(centerItems, { zIndex: 50, autoAlpha: 0, yPercent: 100, overwrite: true });
       gsap.set(bgItems, { zIndex: 1, autoAlpha: 0, scale: 1.5, overwrite: true });
 
-      if (leftItems[0]) {
-        gsap.set(leftItems[0], { autoAlpha: 1, yPercent: 0, overwrite: true });
-        gsap.set(centerItems[0], { autoAlpha: 1, yPercent: 0, overwrite: true });
-        gsap.set(bgItems[0], { autoAlpha: 1, scale: 1, zIndex: 2, overwrite: true });
-      }
+      // Robust Refresh Sync for Sticky Part
+      const pinTrigger = ScrollTrigger.create({
+        id: "tabPaneTrigger_sticky_pin",
+        trigger: q("[el-sticky]"),
+        start: "top top",
+        end: () => "+=" + (triggers.reduce((acc, t) => acc + t.offsetHeight, 0)),
+        pin: true,
+        pinSpacing: false,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onRefresh: (self) => {
+           // Ensure the correct starting items are visible if at the very top
+           if (self.progress === 0 && leftItems[0]) {
+              gsap.set(leftItems[0], { autoAlpha: 1, yPercent: 0, overwrite: true });
+              gsap.set(centerItems[0], { autoAlpha: 1, yPercent: 0, overwrite: true });
+              gsap.set(bgItems[0], { autoAlpha: 1, scale: 1, zIndex: 2, overwrite: true });
+           }
+        }
+      });
 
       triggers.forEach((trigger, i) => {
         let next = i + 1;
@@ -194,30 +204,26 @@ document.addEventListener("DOMContentLoaded", () => {
             start: "top bottom",
             end: "top top",
             scrub: 0.5,
+            invalidateOnRefresh: true,
+            // Ensure synchronization even on rapid jumps
+            onRefresh: (self) => {
+               if (self.progress > 0 && self.progress < 1) {
+                  // Active state logic handled by the timeline
+               }
+            }
           }
         })
         .to([leftItems[i], centerItems[i]], {
-          yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut"
+          yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut", immediateRender: false
         })
         .to([leftItems[next], centerItems[next]], {
-          yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
+          yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut", immediateRender: false
         }, "<")
         .fromTo(bgItems[next],
           { scale: 1.5, autoAlpha: 0, zIndex: next + 5 },
-          { scale: 1, autoAlpha: 1, duration: 1, ease: "power2.out" },
+          { scale: 1, autoAlpha: 1, duration: 1, ease: "power2.out", immediateRender: false },
           "<"
         );
-      });
-
-      ScrollTrigger.create({
-        id: "tabPaneTrigger_sticky_pin",
-        trigger: q("[el-sticky]"),
-        start: "top top",
-        end: () => "+=" + (triggers.reduce((acc, t) => acc + t.offsetHeight, 0)),
-        pin: true,
-        pinSpacing: false,
-        anticipatePin: 1,
-        invalidateOnRefresh: true
       });
     }
   }
@@ -253,15 +259,22 @@ document.addEventListener("DOMContentLoaded", () => {
       scale: 1.3,
       duration: 2,
       ease: "power2.inOut",
-      onStart: () => tabMenu.classList.remove("choose-text"),
-      onComplete: () => tabMenu.classList.add("choose-text"),
-      onReverseComplete: () => tabMenu.classList.remove("choose-text")
     })
+    .call(() => tabMenu.classList.add("choose-text"), null, ">")
     .to({}, { duration: 1.5 })
-    .call(() => tabMenu.classList.remove("choose-text"))
+    .call(() => tabMenu.classList.remove("choose-text"), null, ">")
     .to(tabMenu, { autoAlpha: 0, duration: 0.3, ease: "power1.out" })
     .set(tabMenu, { bottom: "5%", left: "50%", xPercent: -50, yPercent: 0, scale: 1 })
     .to(tabMenu, { autoAlpha: 1, duration: 0.4, ease: "power2.out" });
+    
+    tabTl.eventCallback("onUpdate", () => {
+       const progress = tabTl.progress();
+       if (progress > 0.3 && progress < 0.8) {
+          tabMenu.classList.add("choose-text");
+       } else {
+          tabMenu.classList.remove("choose-text");
+       }
+    });
   }
 
   /* ----------------------------------
@@ -347,7 +360,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!heroSection || !tabSpaceDiv) return;
 
-    // FORCE INITIAL VISIBILITY ON REFRESH
     gsap.set(heroSection, { autoAlpha: 1, overwrite: "auto" });
 
     gsap.to(heroSection, {
@@ -362,7 +374,6 @@ document.addEventListener("DOMContentLoaded", () => {
         invalidateOnRefresh: true,
         overwrite: "auto",
         onRefresh: (self) => {
-           // Ensure state is correct after calculation
            if (self.progress === 0 && self.scroll() < self.start) {
               gsap.set(heroSection, { autoAlpha: 1 });
            } else if (self.progress === 1) {
@@ -394,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabLinks = document.querySelectorAll(".w-tab-link");
   tabLinks.forEach(tab => {
     tab.addEventListener("click", () => {
-      setTimeout(initAll, 900);
+      setTimeout(initAll, 950);
     });
   });
 
