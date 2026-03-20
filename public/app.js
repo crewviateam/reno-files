@@ -76,7 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
           scrub: 0.5,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
-          // NEW: Ensure visibility is synced on refresh and lifecycle
           onRefresh: (self) => {
              // If we are anywhere within the trigger, ensure background is visible
              if (self.isActive) {
@@ -161,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
         yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
       }, "-=0.5");
       
-      // FINAL HIDE: Absolute cleanup at the end of the timeline
+      // FINAL HIDE: Absolute cleanup at the end of the main timeline
       mainTL.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
         autoAlpha: 0, duration: 0.1
       }, ">");
@@ -348,6 +347,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!heroSection || !tabSpaceDiv) return;
 
+    // FORCE INITIAL VISIBILITY ON REFRESH
+    gsap.set(heroSection, { autoAlpha: 1, overwrite: "auto" });
+
     gsap.to(heroSection, {
       autoAlpha: 0,
       ease: "none",
@@ -358,7 +360,15 @@ document.addEventListener("DOMContentLoaded", () => {
         end: "top center",
         scrub: true,
         invalidateOnRefresh: true,
-        overwrite: "auto"
+        overwrite: "auto",
+        onRefresh: (self) => {
+           // Ensure state is correct after calculation
+           if (self.progress === 0 && self.scroll() < self.start) {
+              gsap.set(heroSection, { autoAlpha: 1 });
+           } else if (self.progress === 1) {
+              gsap.set(heroSection, { autoAlpha: 0 });
+           }
+        }
       }
     });
   }
@@ -384,7 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabLinks = document.querySelectorAll(".w-tab-link");
   tabLinks.forEach(tab => {
     tab.addEventListener("click", () => {
-      setTimeout(initAll, 850);
+      setTimeout(initAll, 900);
     });
   });
 
