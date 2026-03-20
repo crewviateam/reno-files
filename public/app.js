@@ -77,10 +77,18 @@ document.addEventListener("DOMContentLoaded", () => {
           invalidateOnRefresh: true,
           fastScrollEnd: true,
           onRefresh: (self) => {
-             // Only toggle the base container visibility, do not force individual images
+             // On refresh, check if we are already past the start point
              if (self.isActive || self.progress > 0) {
                gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
-             } else if (self.progress === 0) {
+             } else {
+               gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
+             }
+          },
+          onToggle: (self) => {
+             // Ensure elements are hidden when scrolling back up past the start
+             if (self.isActive || self.progress > 0) {
+               gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
+             } else {
                gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
              }
           }
