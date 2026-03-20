@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ----------------------------------
     2. TAB PANE ANIMATIONS 
-    (Merged logic from first and last parts of original file)
   ---------------------------------- */
   function initTabPaneAnimations(activePane) {
     if (!activePane) return;
@@ -35,29 +34,29 @@ document.addEventListener("DOMContentLoaded", () => {
       const triggerEl = q(".tab-section_fixed_height")[0];
 
       // Reset states
+      gsap.set(q(".tab_imagine_content_wrapper.is-01"), { yPercent: 0, opacity: 1 });
       gsap.set(q(".tab_imagine_content_wrapper.is-02, .tab_imagine_content_wrapper.is-03"), {
         yPercent: 100, opacity: 0
       });
       gsap.set(
-        q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"),
+        q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3"),
         { scale: 1, opacity: 1, yPercent: 0, filter: "blur(0px)" }
       );
       gsap.set(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7, .re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
         scale: 0, opacity: 0, filter: "blur(0px)"
       });
       
-      // Ensure parallax/image elements are reset
+      // Reset image wrap content
       gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
         opacity: 0, visibility: "hidden"
       });
 
-      // Initial states for mobile app mockups
-      gsap.set(".mobile-app-container .mobile_mockup_image", {
-        clearProps: "transform",
+      // Fixed initial states for mobile app mockups (Scoped)
+      gsap.set(q(".mobile-app-container .mobile_mockup_image"), {
         yPercent: -150,
         opacity: 0
       });
-      gsap.set(".mobile-app-container .mobile_mocup_content", {
+      gsap.set(q(".mobile-app-container .mobile_mocup_content"), {
         yPercent: 150,
         opacity: 0
       });
@@ -86,7 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
           start: "top top",
           end: "bottom bottom",
           scrub: 0.5,
-          invalidateOnRefresh: true
+          invalidateOnRefresh: true,
+          fastScrollEnd: true
         }
       });
 
@@ -152,9 +152,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
-      mainTL.to(".mobile-app-container .mobile_mockup_image", {
+      mainTL.to(q(".mobile-app-container .mobile_mockup_image"), {
         yPercent: 0, opacity: 1, duration: 1, ease: "power2.inOut"
-      }).to(".mobile-app-container .mobile_mocup_content", {
+      }).to(q(".mobile-app-container .mobile_mocup_content"), {
         yPercent: 0, opacity: 1, duration: 1, ease: "power2.inOut"
       }, "-=0.5");
     }
@@ -225,7 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabSpaceDiv = activePane.querySelector(".tab-space-div");
     if (!tabSpaceDiv) return;
 
-    // Reset styles to avoid jumps
     gsap.set(tabMenu, { clearProps: "all" });
 
     const tabTl = gsap.timeline({
@@ -276,7 +275,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const colorLogoImg = track.querySelector(".one_place-image");
       const colorLogoContent = track.querySelector(".color-logo-content");
 
-      // Reset
       gsap.set([cards, colLogo, partnerText, partnerRLogo, colorLogoImg, colorLogoContent], { clearProps: "all" });
 
       const tl = gsap.timeline({
@@ -378,14 +376,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ScrollTrigger.refresh();
   }
 
-  // Initial call
-  initAll();
+  // Wait a small bit for the browser to restore scroll position and finish layout
+  setTimeout(() => {
+    initAll();
+  }, 100);
 
   // --- TAB CHANGE HANDLING ---
   const tabLinks = document.querySelectorAll(".w-tab-link");
   tabLinks.forEach(tab => {
     tab.addEventListener("click", () => {
-      // Small delay for Webflow's internal tab switching
       setTimeout(() => {
         initAll();
       }, 500);
