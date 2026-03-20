@@ -77,14 +77,9 @@ document.addEventListener("DOMContentLoaded", () => {
           invalidateOnRefresh: true,
           fastScrollEnd: true,
           onRefresh: (self) => {
-             // If we are anywhere within the trigger, ensure background is visible
+             // Only toggle the base container visibility, do not force individual images
              if (self.isActive || self.progress > 0) {
-               gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
-               
-               // If we are at the very end, ensure the mobile mockup is shown
-               if (self.progress === 1) {
-                  gsap.set(q(".mobile-app-container .mobile_mockup_image, .mobile-app-container .mobile_mocup_content"), { autoAlpha: 1, yPercent: 0 });
-               }
+               gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
              } else if (self.progress === 0) {
                gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
              }
@@ -92,9 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // 0. Initial visibility (within the timeline)
-      mainTL.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-        autoAlpha: 1, duration: 0.1
+      // 0. Initial base visibility
+      mainTL.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
+        autoAlpha: 1
       }, 0);
 
       // BATCH 1: OUT
@@ -124,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: 1
       }, 5.2);
 
-      // BATCH 3: IN (Only fade in, no fade out for the last batch)
+      // BATCH 3: IN (Stay)
       mainTL.fromTo(q(".tab_imagine_content_wrapper.is-03"),
         { yPercent: 100, autoAlpha: 0 },
         { yPercent: 0, autoAlpha: 1, ease: "power2.out", duration: 1 },
@@ -135,13 +130,20 @@ document.addEventListener("DOMContentLoaded", () => {
         { scale: 1, autoAlpha: 1, stagger: 0.15, ease: "power2.out", duration: 1 },
         6.5
       )
-      // Removed the exit animation for Batch 3 to prevent unwanted fade-out
+      // Slide 3 text moves out to make room for mobile app
       .to(q(".tab_imagine_content_wrapper.is-03"), {
         yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut"
       }, 8.2);
-      // Removed the exit animation for images 8-11
 
-      // Parallax
+      // MOBILE APP MOCKUP: Final Part
+      mainTL.to(q(".mobile-app-container .mobile_mockup_image"), {
+        yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
+      }, ">-0.5") // Starts slightly after Batch 3 text begins moving out
+      .to(q(".mobile-app-container .mobile_mocup_content"), {
+        yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
+      }, "-=0.5");
+
+      // Parallax (Separate from mainTL for continuous effect)
       q(".re-imagine_image-wrap img").forEach((img, i) => {
         gsap.to(img, {
           y: () => ((i % 3) * 0.3) * 100,
@@ -152,14 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       });
-
-      mainTL.to(q(".mobile-app-container .mobile_mockup_image"), {
-        yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
-      }, 8.5).to(q(".mobile-app-container .mobile_mocup_content"), {
-        yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
-      }, "-=0.5");
-      
-      // Removed FINAL HIDE block to keep it visible at the end
     }
 
     /* Part B: Sticky Animation */
