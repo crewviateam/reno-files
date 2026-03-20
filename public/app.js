@@ -19,224 +19,213 @@ document.addEventListener("DOMContentLoaded", () => {
     2. TAB PANE ANIMATIONS 
     (Merged logic from first and last parts of original file)
   ---------------------------------- */
-  function initTabPaneAnimations() {
-    // Kill existing triggers to avoid duplicates
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.id && st.vars.id.startsWith("tabPaneTrigger")) st.kill();
-    });
+  function initTabPaneAnimations(activePane) {
+    if (!activePane) return;
 
-    const tabPanes = gsap.utils.toArray(".w-tab-pane");
+    const q = gsap.utils.selector(activePane);
+    
+    // Check for fixed height section or sticky elements
+    const hasFixedHeight = q(".tab-section_fixed_height").length > 0;
+    const hasSticky = q("[el-sticky]").length > 0;
 
-    tabPanes.forEach((pane, index) => {
-      const q = gsap.utils.selector(pane);
+    if (!hasFixedHeight && !hasSticky) return;
+
+    /* Part A: Imagine Animation (Fixed Height) */
+    if (hasFixedHeight) {
+      const triggerEl = q(".tab-section_fixed_height")[0];
+
+      // Reset states
+      gsap.set(q(".tab_imagine_content_wrapper.is-02, .tab_imagine_content_wrapper.is-03"), {
+        yPercent: 100, opacity: 0
+      });
+      gsap.set(
+        q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"),
+        { scale: 1, opacity: 1, yPercent: 0, filter: "blur(0px)" }
+      );
+      gsap.set(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7, .re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
+        scale: 0, opacity: 0, filter: "blur(0px)"
+      });
       
-      // Check for fixed height section or sticky elements
-      const hasFixedHeight = q(".tab-section_fixed_height").length > 0;
-      const hasSticky = q("[el-sticky]").length > 0;
+      // Ensure parallax/image elements are reset
+      gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
+        opacity: 0, visibility: "hidden"
+      });
 
-      if (!hasFixedHeight && !hasSticky) return;
+      // Initial states for mobile app mockups
+      gsap.set(".mobile-app-container .mobile_mockup_image", {
+        clearProps: "transform",
+        yPercent: -150,
+        opacity: 0
+      });
+      gsap.set(".mobile-app-container .mobile_mocup_content", {
+        yPercent: 150,
+        opacity: 0
+      });
 
-      /* Part A: Imagine Animation (Fixed Height) */
-      if (hasFixedHeight) {
-        const triggerEl = q(".tab-section_fixed_height")[0];
-
-        // Reset states
-        gsap.set(q(".tab_imagine_content_wrapper.is-02, .tab_imagine_content_wrapper.is-03"), {
-          yPercent: 100, opacity: 0
-        });
-        gsap.set(
-          q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"),
-          { scale: 1, opacity: 1, yPercent: 0, filter: "blur(0px)" }
-        );
-        gsap.set(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7, .re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
-          scale: 0, opacity: 0, filter: "blur(0px)"
-        });
-        
-        // Ensure parallax/image elements are reset
-        gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-          opacity: 0, visibility: "hidden"
-        });
-
-        // Initial states for mobile app mockups
-        gsap.set(".mobile-app-container .mobile_mockup_image", {
-          clearProps: "transform",
-          yPercent: -150,
-          opacity: 0
-        });
-        gsap.set(".mobile-app-container .mobile_mocup_content", {
-          yPercent: 150,
-          opacity: 0
-        });
-
-        // Visibility toggle trigger
-        ScrollTrigger.create({
-          id: `tabPaneTrigger_visibility_${index}`,
-          trigger: triggerEl,
-          start: "top 80%",
-          onEnter: () => {
-            gsap.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-              opacity: 1, visibility: "visible", duration: 0.4, ease: "power1.out"
-            });
-          },
-          onLeaveBack: () => {
-            gsap.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-              opacity: 0, visibility: "hidden", duration: 0.3, ease: "power1.in"
-            });
-          }
-        });
-
-        const mainTL = gsap.timeline({
-          scrollTrigger: {
-            id: `tabPaneTrigger_main_${index}`,
-            trigger: triggerEl,
-            start: "top top",
-            end: "bottom bottom",
-            scrub: 0.5,
-            invalidateOnRefresh: true
-          }
-        });
-
-        const batch2StartTime = 3.0;
-        const batch3StartTime = 6.0;
-        const durationPerTransition = 1.0;
-        const staggerDuration = 0.5;
-
-        // BATCH 1: OUT
-        mainTL.to(q(".tab_imagine_content_wrapper.is-01"), {
-          yPercent: -100, opacity: 0, ease: "power2.in", duration: durationPerTransition
-        }, 0.5);
-
-        mainTL.to(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3"), {
-          scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.15, ease: "power2.in", duration: durationPerTransition
-        }, 1.5);
-
-        // BATCH 2: IN & OUT
-        mainTL.fromTo(q(".tab_imagine_content_wrapper.is-02"), 
-          { yPercent: 100, opacity: 0 },
-          { yPercent: 0, opacity: 1, ease: "power2.out", duration: durationPerTransition },
-          batch2StartTime
-        )
-        .fromTo(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7"),
-          { scale: 0, opacity: 0 },
-          { scale: 1, opacity: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
-          batch2StartTime + staggerDuration
-        )
-        .to(q(".tab_imagine_content_wrapper.is-02"), {
-          yPercent: -100, opacity: 0, ease: "power2.in", duration: durationPerTransition
-        }, batch2StartTime + 2.0)
-        .to(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7"), {
-          scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
-        }, batch2StartTime + 2.2);
-
-        // BATCH 3: IN & OUT
-        mainTL.fromTo(q(".tab_imagine_content_wrapper.is-03"),
-          { yPercent: 100, opacity: 0 },
-          { yPercent: 0, opacity: 1, ease: "power2.out", duration: durationPerTransition },
-          batch3StartTime
-        )
-        .fromTo(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"),
-          { scale: 0, opacity: 0 },
-          { scale: 1, opacity: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
-          batch3StartTime + staggerDuration
-        )
-        .to(q(".tab_imagine_content_wrapper.is-03"), {
-          yPercent: -100, opacity: 0, duration: durationPerTransition, ease: "power2.inOut"
-        }, batch3StartTime + 2.2)
-        .to(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
-          scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
-        }, batch3StartTime + 2.2);
-
-        // Parallax
-        q(".re-imagine_image-wrap img").forEach((img, i) => {
-          gsap.to(img, {
-            y: () => ((i % 3) * 0.3) * 100,
-            scrollTrigger: {
-              id: `tabPaneTrigger_parallax_${index}_${i}`,
-              trigger: triggerEl,
-              start: "top top", end: "bottom top", scrub: true
-            }
+      // Visibility toggle trigger
+      ScrollTrigger.create({
+        id: "tabPaneTrigger_visibility",
+        trigger: triggerEl,
+        start: "top 80%",
+        onEnter: () => {
+          gsap.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
+            opacity: 1, visibility: "visible", duration: 0.4, ease: "power1.out"
           });
-        });
-
-        mainTL.to(".mobile-app-container .mobile_mockup_image", {
-          yPercent: 0, opacity: 1, duration: 1, ease: "power2.inOut"
-        }).to(".mobile-app-container .mobile_mocup_content", {
-          yPercent: 0, opacity: 1, duration: 1, ease: "power2.inOut"
-        }, "-=0.5");
-      }
-
-      /* Part B: Sticky Animation */
-      if (hasSticky) {
-        const leftItems = q(".tabs_flexbox_left");
-        const centerItems = q(".tabs_flex_right_center_img");
-        const bgItems = q(".tabs_flex_img");
-        const triggers = q("[el-trigger]");
-
-        gsap.set(leftItems, { zIndex: 50, autoAlpha: 0, yPercent: 100 });
-        gsap.set(centerItems, { zIndex: 50, autoAlpha: 0, yPercent: 100 });
-        gsap.set(bgItems, { zIndex: 1, autoAlpha: 0, scale: 1.5 });
-
-        if (leftItems[0]) {
-          gsap.set(leftItems[0], { autoAlpha: 1, yPercent: 0 });
-          gsap.set(centerItems[0], { autoAlpha: 1, yPercent: 0 });
-          gsap.set(bgItems[0], { autoAlpha: 1, scale: 1, zIndex: 2 });
+        },
+        onLeaveBack: () => {
+          gsap.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
+            opacity: 0, visibility: "hidden", duration: 0.3, ease: "power1.in"
+          });
         }
+      });
 
-        triggers.forEach((trigger, i) => {
-          let next = i + 1;
-          if (!leftItems[next]) return;
-
-          gsap.timeline({
-            scrollTrigger: {
-              id: `tabPaneTrigger_sticky_tl_${index}_${i}`,
-              trigger: trigger,
-              start: "top bottom",
-              end: "top top",
-              scrub: 0.5,
-            }
-          })
-          .to([leftItems[i], centerItems[i]], {
-            yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut"
-          })
-          .to([leftItems[next], centerItems[next]], {
-            yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
-          }, "<")
-          .fromTo(bgItems[next],
-            { scale: 1.5, autoAlpha: 0, zIndex: next + 5 },
-            { scale: 1, autoAlpha: 1, duration: 1, ease: "power2.out" },
-            "<"
-          );
-        });
-
-        ScrollTrigger.create({
-          id: `tabPaneTrigger_sticky_pin_${index}`,
-          trigger: q("[el-sticky]"),
+      const mainTL = gsap.timeline({
+        scrollTrigger: {
+          id: "tabPaneTrigger_main",
+          trigger: triggerEl,
           start: "top top",
-          end: () => "+=" + (triggers.reduce((acc, t) => acc + t.offsetHeight, 0)),
-          pin: true,
-          pinSpacing: false,
-          anticipatePin: 1,
+          end: "bottom bottom",
+          scrub: 0.5,
           invalidateOnRefresh: true
+        }
+      });
+
+      const batch2StartTime = 3.0;
+      const batch3StartTime = 6.0;
+      const durationPerTransition = 1.0;
+      const staggerDuration = 0.5;
+
+      // BATCH 1: OUT
+      mainTL.to(q(".tab_imagine_content_wrapper.is-01"), {
+        yPercent: -100, opacity: 0, ease: "power2.in", duration: durationPerTransition
+      }, 0.5);
+
+      mainTL.to(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3"), {
+        scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.15, ease: "power2.in", duration: durationPerTransition
+      }, 1.5);
+
+      // BATCH 2: IN & OUT
+      mainTL.fromTo(q(".tab_imagine_content_wrapper.is-02"), 
+        { yPercent: 100, opacity: 0 },
+        { yPercent: 0, opacity: 1, ease: "power2.out", duration: durationPerTransition },
+        batch2StartTime
+      )
+      .fromTo(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7"),
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
+        batch2StartTime + staggerDuration
+      )
+      .to(q(".tab_imagine_content_wrapper.is-02"), {
+        yPercent: -100, opacity: 0, ease: "power2.in", duration: durationPerTransition
+      }, batch2StartTime + 2.0)
+      .to(q(".re-imagine_image-4, .re-imagine_image-5, .re-imagine_image-6, .re-imagine_image-7"), {
+        scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
+      }, batch2StartTime + 2.2);
+
+      // BATCH 3: IN & OUT
+      mainTL.fromTo(q(".tab_imagine_content_wrapper.is-03"),
+        { yPercent: 100, opacity: 0 },
+        { yPercent: 0, opacity: 1, ease: "power2.out", duration: durationPerTransition },
+        batch3StartTime
+      )
+      .fromTo(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"),
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, stagger: 0.15, ease: "power2.out", duration: durationPerTransition },
+        batch3StartTime + staggerDuration
+      )
+      .to(q(".tab_imagine_content_wrapper.is-03"), {
+        yPercent: -100, opacity: 0, duration: durationPerTransition, ease: "power2.inOut"
+      }, batch3StartTime + 2.2)
+      .to(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
+        scale: 3.5, opacity: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: durationPerTransition
+      }, batch3StartTime + 2.2);
+
+      // Parallax
+      q(".re-imagine_image-wrap img").forEach((img, i) => {
+        gsap.to(img, {
+          y: () => ((i % 3) * 0.3) * 100,
+          scrollTrigger: {
+            id: `tabPaneTrigger_parallax_${i}`,
+            trigger: triggerEl,
+            start: "top top", end: "bottom top", scrub: true
+          }
         });
+      });
+
+      mainTL.to(".mobile-app-container .mobile_mockup_image", {
+        yPercent: 0, opacity: 1, duration: 1, ease: "power2.inOut"
+      }).to(".mobile-app-container .mobile_mocup_content", {
+        yPercent: 0, opacity: 1, duration: 1, ease: "power2.inOut"
+      }, "-=0.5");
+    }
+
+    /* Part B: Sticky Animation */
+    if (hasSticky) {
+      const leftItems = q(".tabs_flexbox_left");
+      const centerItems = q(".tabs_flex_right_center_img");
+      const bgItems = q(".tabs_flex_img");
+      const triggers = q("[el-trigger]");
+
+      gsap.set(leftItems, { zIndex: 50, autoAlpha: 0, yPercent: 100 });
+      gsap.set(centerItems, { zIndex: 50, autoAlpha: 0, yPercent: 100 });
+      gsap.set(bgItems, { zIndex: 1, autoAlpha: 0, scale: 1.5 });
+
+      if (leftItems[0]) {
+        gsap.set(leftItems[0], { autoAlpha: 1, yPercent: 0 });
+        gsap.set(centerItems[0], { autoAlpha: 1, yPercent: 0 });
+        gsap.set(bgItems[0], { autoAlpha: 1, scale: 1, zIndex: 2 });
       }
-    });
+
+      triggers.forEach((trigger, i) => {
+        let next = i + 1;
+        if (!leftItems[next]) return;
+
+        gsap.timeline({
+          scrollTrigger: {
+            id: `tabPaneTrigger_sticky_tl_${i}`,
+            trigger: trigger,
+            start: "top bottom",
+            end: "top top",
+            scrub: 0.5,
+          }
+        })
+        .to([leftItems[i], centerItems[i]], {
+          yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut"
+        })
+        .to([leftItems[next], centerItems[next]], {
+          yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
+        }, "<")
+        .fromTo(bgItems[next],
+          { scale: 1.5, autoAlpha: 0, zIndex: next + 5 },
+          { scale: 1, autoAlpha: 1, duration: 1, ease: "power2.out" },
+          "<"
+        );
+      });
+
+      ScrollTrigger.create({
+        id: "tabPaneTrigger_sticky_pin",
+        trigger: q("[el-sticky]"),
+        start: "top top",
+        end: () => "+=" + (triggers.reduce((acc, t) => acc + t.offsetHeight, 0)),
+        pin: true,
+        pinSpacing: false,
+        anticipatePin: 1,
+        invalidateOnRefresh: true
+      });
+    }
   }
 
   /* ----------------------------------
     3. MENU CENTER ANIMATION
   ---------------------------------- */
-  function initMenuCenterAnimation() {
+  function initMenuCenterAnimation(activePane) {
     const tabMenu = document.querySelector(".w-tab-menu");
-    const tabSpaceDiv = document.querySelector(".tab-space-div");
+    if (!tabMenu || !activePane) return;
 
-    if (!tabMenu || !tabSpaceDiv) return;
+    const tabSpaceDiv = activePane.querySelector(".tab-space-div");
+    if (!tabSpaceDiv) return;
 
-    // Kill old if exists
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.id === "menuCenterTrigger") st.kill();
-    });
-
-    // Reset styles to avoid jumps from previous state
+    // Reset styles to avoid jumps
     gsap.set(tabMenu, { clearProps: "all" });
 
     const tabTl = gsap.timeline({
@@ -272,15 +261,10 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ----------------------------------
     4. PARTNER TRACK ANIMATION
   ---------------------------------- */
-  function initPartnerTrackAnimation() {
-    const partnerTracks = document.querySelectorAll("[data-partner-track]");
-    if (!partnerTracks.length) return;
+  function initPartnerTrackAnimation(activePane) {
+    if (!activePane) return;
 
-    // Kill old triggers
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.id && st.vars.id.startsWith("partnerTrackTrigger")) st.kill();
-    });
-
+    const partnerTracks = activePane.querySelectorAll("[data-partner-track]");
     partnerTracks.forEach((track, trackIndex) => {
       const cards = track.querySelectorAll("img.partner-img");
       const stickySec = track.querySelector(".partners_sticky");
@@ -306,7 +290,6 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       });
 
-      // We use functional values to ensure correct positions if tab was hidden
       const timelineRender = (cardIndex, prcnt) => {
         const card = cards[cardIndex];
         if (!card) return;
@@ -352,20 +335,12 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ----------------------------------
     5. HERO HIDE ANIMATION
   ---------------------------------- */
-  function initHeroHide() {
-    const heroSection = document.querySelector(".app-hero_section");
-    const tabSpaceDiv = document.querySelector(".tab-space-div");
+  function initHeroHide(activePane) {
+    if (!activePane) return;
+    const heroSection = activePane.querySelector(".app-hero_section");
+    const tabSpaceDiv = activePane.querySelector(".tab-space-div");
 
     if (!heroSection || !tabSpaceDiv) return;
-
-    // Kill old trigger if exists
-    ScrollTrigger.getAll().forEach(st => {
-      if (st.vars.id === "heroHideTrigger") st.kill();
-    });
-
-    // Reset opacity initially to ensure it's in a known state
-    // But ONLY if we can't trust the scrub to immediately set it. 
-    // gsap.set(heroSection, { opacity: 1 }); // Be careful with flicker
 
     gsap.to(heroSection, {
       opacity: 0,
@@ -384,16 +359,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- INITIALIZATION ---
   function initAll() {
-    setupAedSigns();
-    initTabPaneAnimations();
-    initMenuCenterAnimation();
-    initPartnerTrackAnimation();
-    initHeroHide();
+    // 1. Kill EVERY ScrollTrigger to start fresh
+    ScrollTrigger.getAll().forEach(st => st.kill());
     
-    // Final refresh to ensure everything is measured correctly
+    // 2. Global Utilities
+    setupAedSigns();
+
+    // 3. Find the Active Tab Pane
+    const activePane = document.querySelector(".w-tab-pane.w--tab-active");
+    if (activePane) {
+      initTabPaneAnimations(activePane);
+      initMenuCenterAnimation(activePane);
+      initPartnerTrackAnimation(activePane);
+      initHeroHide(activePane);
+    }
+    
+    // 4. Final refresh to ensure everything is measured correctly
     ScrollTrigger.refresh();
   }
 
+  // Initial call
   initAll();
 
   // --- TAB CHANGE HANDLING ---
@@ -402,10 +387,13 @@ document.addEventListener("DOMContentLoaded", () => {
     tab.addEventListener("click", () => {
       // Small delay for Webflow's internal tab switching
       setTimeout(() => {
-        // Re-init specific components that depend on DOM layout
         initAll();
       }, 500);
     });
   });
 
+  // Handle window resize
+  window.addEventListener("resize", () => {
+    ScrollTrigger.refresh();
+  });
 });
