@@ -256,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bottom: "50%",
       xPercent: -50,
       yPercent: -50,
-      scale: 1.3,
+      scale: 1.8,
       duration: 2,
       ease: "power2.inOut",
     })
