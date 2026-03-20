@@ -53,10 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Ensure the main wrap is visible so decorators stay visible
       gsap.set(q(".re-imagine_image-wrap"), { autoAlpha: 1, overwrite: true });
 
-      // Initial state: hide ONLY the elements that are meant to enter at the trigger point
-      // Slide 1 elements:
+      // Initial state: Set Slide 1 elements to 1 so the scrubbed timeline shows them by default.
+      // They will be hidden reactively by the onRefresh/onLeaveBack callbacks if we are above the section.
       gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), {
-        autoAlpha: 0, overwrite: true
+        autoAlpha: 1, overwrite: true
       });
       // Slide 2 & 3 elements (already scale 0/alpha 0 but reinforce):
       gsap.set(q(".tab_imagine_content_wrapper.is-02, .tab_imagine_content_wrapper.is-03"), {
@@ -87,19 +87,23 @@ document.addEventListener("DOMContentLoaded", () => {
           scrub: 0.5,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
-          onToggle: (self) => {
-             // Symmetrical entry/exit visibility ONLY at the start point
-             // This avoids fighting the scrubbed timeline's own alpha animations later on
-             if (self.progress <= 0.01) {
-                const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
-                gsap.set(slide1Elements, { autoAlpha: self.isActive ? 1 : 0 });
-             }
+          onEnter: () => {
+             // Show slide 1 elements immediately when entering from the top
+             gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), { autoAlpha: 1 });
+          },
+          onLeaveBack: () => {
+             // Responsive hide when scrolling back up past the start point
+             gsap.set(q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01"), { autoAlpha: 0 });
           },
           onRefresh: (self) => {
-             // Hide slide 1 elements only if we are currently above the start point
-             if (self.progress <= 0.01 && !self.isActive) {
-                const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
-                gsap.set(slide1Elements, { autoAlpha: 0 });
+             // On load/refresh, ensure visibility matches current scroll position relative to start
+             const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
+             if (self.progress === 0 && !self.isActive) {
+               gsap.set(slide1Elements, { autoAlpha: 0 });
+             } else if (self.isActive || self.progress > 0) {
+               // If we are already inside or past the section (e.g. refresh at bottom), 
+               // the timeline should handle individual alpha state, but container must be visible.
+               gsap.set(slide1Elements, { autoAlpha: 1 });
              }
           }
         }
@@ -385,11 +389,19 @@ document.addEventListener("DOMContentLoaded", () => {
         invalidateOnRefresh: true,
         overwrite: "auto",
         onRefresh: (self) => {
-           if (self.progress === 0 && self.scroll() < self.start) {
+           if (self.progress === 0 && !self.isActive) {
               gsap.set(heroSection, { autoAlpha: 1 });
            } else if (self.progress === 1) {
               gsap.set(heroSection, { autoAlpha: 0 });
            }
+        },
+        onEnterBack: () => {
+           // Ensure it fades back in when scrolling up into the trigger
+           gsap.set(heroSection, { autoAlpha: 1 });
+        },
+        onLeaveBack: () => {
+           // Ensure it is fully visible when we scroll out towards the top
+           gsap.set(heroSection, { autoAlpha: 1 });
         }
       }
     });
