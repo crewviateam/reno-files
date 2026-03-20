@@ -71,16 +71,21 @@ document.addEventListener("DOMContentLoaded", () => {
         scrollTrigger: {
           id: "tabPaneTrigger_main",
           trigger: triggerEl,
-          start: "top 120%",
+          start: "top 110%",
           end: "bottom bottom",
           scrub: 0.5,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
           onRefresh: (self) => {
              // If we are anywhere within the trigger, ensure background is visible
-             if (self.isActive) {
+             if (self.isActive || self.progress > 0) {
                gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
-             } else if (self.progress === 0 || self.progress === 1) {
+               
+               // If we are at the very end, ensure the mobile mockup is shown
+               if (self.progress === 1) {
+                  gsap.set(q(".mobile-app-container .mobile_mockup_image, .mobile-app-container .mobile_mocup_content"), { autoAlpha: 1, yPercent: 0 });
+               }
+             } else if (self.progress === 0) {
                gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
              }
           }
@@ -119,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
         scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: 1
       }, 5.2);
 
-      // BATCH 3: IN & OUT
+      // BATCH 3: IN (Only fade in, no fade out for the last batch)
       mainTL.fromTo(q(".tab_imagine_content_wrapper.is-03"),
         { yPercent: 100, autoAlpha: 0 },
         { yPercent: 0, autoAlpha: 1, ease: "power2.out", duration: 1 },
@@ -130,12 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
         { scale: 1, autoAlpha: 1, stagger: 0.15, ease: "power2.out", duration: 1 },
         6.5
       )
+      // Removed the exit animation for Batch 3 to prevent unwanted fade-out
       .to(q(".tab_imagine_content_wrapper.is-03"), {
         yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut"
-      }, 8.2)
-      .to(q(".re-imagine_image-8, .re-imagine_image-9, .re-imagine_image-10, .re-imagine_image-11"), {
-        scale: 3.5, autoAlpha: 0, filter: "blur(20px)", stagger: 0.1, ease: "power2.in", duration: 1
       }, 8.2);
+      // Removed the exit animation for images 8-11
 
       // Parallax
       q(".re-imagine_image-wrap img").forEach((img, i) => {
@@ -151,14 +155,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       mainTL.to(q(".mobile-app-container .mobile_mockup_image"), {
         yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
-      }).to(q(".mobile-app-container .mobile_mocup_content"), {
+      }, 8.5).to(q(".mobile-app-container .mobile_mocup_content"), {
         yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
       }, "-=0.5");
       
-      // FINAL HIDE: Absolute cleanup at the end of the main timeline
-      mainTL.to(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
-        autoAlpha: 0, duration: 0.1
-      }, ">");
+      // Removed FINAL HIDE block to keep it visible at the end
     }
 
     /* Part B: Sticky Animation */
@@ -168,60 +169,61 @@ document.addEventListener("DOMContentLoaded", () => {
       const bgItems = q(".tabs_flex_img");
       const triggers = q("[el-trigger]");
 
-      // Initial reset for all
-      gsap.set(leftItems, { zIndex: 50, autoAlpha: 0, yPercent: 100, overwrite: true });
-      gsap.set(centerItems, { zIndex: 50, autoAlpha: 0, yPercent: 100, overwrite: true });
-      gsap.set(bgItems, { zIndex: 1, autoAlpha: 0, scale: 1.5, overwrite: true });
+      // FIX: Ensure the left content wrapper is always on top of images
+      gsap.set(q(".tabs_flexbox_content_wrap"), { zIndex: 100, position: "relative" });
 
-      // Robust Refresh Sync for Sticky Part
-      const pinTrigger = ScrollTrigger.create({
-        id: "tabPaneTrigger_sticky_pin",
-        trigger: q("[el-sticky]"),
-        start: "top top",
-        end: () => "+=" + (triggers.reduce((acc, t) => acc + t.offsetHeight, 0)),
-        pin: true,
-        pinSpacing: false,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        onRefresh: (self) => {
-           // Ensure the correct starting items are visible if at the very top
-           if (self.progress === 0 && leftItems[0]) {
-              gsap.set(leftItems[0], { autoAlpha: 1, yPercent: 0, overwrite: true });
-              gsap.set(centerItems[0], { autoAlpha: 1, yPercent: 0, overwrite: true });
-              gsap.set(bgItems[0], { autoAlpha: 1, scale: 1, zIndex: 2, overwrite: true });
-           }
+      // Comprehensive Initial Reset
+      gsap.set([leftItems, centerItems], { autoAlpha: 0, yPercent: 100, overwrite: true });
+      gsap.set(bgItems, { autoAlpha: 0, scale: 1.5, zIndex: 1, overwrite: true });
+
+      // Show first item immediately as default
+      gsap.set([leftItems[0], centerItems[0]], { autoAlpha: 1, yPercent: 0 });
+      gsap.set(bgItems[0], { autoAlpha: 1, scale: 1, zIndex: 2 });
+
+      // Unified Timeline for ALL transitions ensures only one item is active at a time
+      const stickyTL = gsap.timeline({
+        scrollTrigger: {
+          id: "tabPaneTrigger_sticky_main",
+          trigger: q("[el-sticky]"),
+          start: "top top",
+          end: () => "+=" + (triggers.reduce((acc, t) => acc + t.offsetHeight, 0)),
+          pin: true,
+          scrub: 0.5,
+          invalidateOnRefresh: true,
+          onRefresh: (self) => {
+             // Robust state recovery on refresh/tab-change
+             if (self.progress === 0) {
+               gsap.set([leftItems[0], centerItems[0]], { autoAlpha: 1, yPercent: 0 });
+               gsap.set(leftItems.slice(1), { autoAlpha: 0, yPercent: 100 });
+               gsap.set(bgItems[0], { autoAlpha: 1, scale: 1 });
+               gsap.set(bgItems.slice(1), { autoAlpha: 0 });
+             } else if (self.progress === 1) {
+               const last = leftItems.length - 1;
+               gsap.set([leftItems[last], centerItems[last]], { autoAlpha: 1, yPercent: 0 });
+               gsap.set(leftItems.slice(0, last), { autoAlpha: 0, yPercent: -100 });
+               gsap.set(bgItems[last], { autoAlpha: 1, scale: 1 });
+               gsap.set(bgItems.slice(0, last), { autoAlpha: 0 });
+             }
+          }
         }
       });
 
+      // Build the sequential transitions
       triggers.forEach((trigger, i) => {
         let next = i + 1;
         if (!leftItems[next]) return;
 
-        gsap.timeline({
-          scrollTrigger: {
-            id: `tabPaneTrigger_sticky_tl_${i}`,
-            trigger: trigger,
-            start: "top bottom",
-            end: "top top",
-            scrub: 0.5,
-            invalidateOnRefresh: true,
-            // Ensure synchronization even on rapid jumps
-            onRefresh: (self) => {
-               if (self.progress > 0 && self.progress < 1) {
-                  // Active state logic handled by the timeline
-               }
-            }
-          }
-        })
-        .to([leftItems[i], centerItems[i]], {
-          yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut", immediateRender: false
-        })
+        // Define a clean transition where slide i moves out and slide next moves in
+        // Using a relative duration/position ensures they are totally synced
+        stickyTL.to([leftItems[i], centerItems[i]], {
+          yPercent: -100, autoAlpha: 0, duration: 1, ease: "power2.inOut"
+        }, i * 1.5) // Even spacing
         .to([leftItems[next], centerItems[next]], {
-          yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut", immediateRender: false
+          yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
         }, "<")
         .fromTo(bgItems[next],
           { scale: 1.5, autoAlpha: 0, zIndex: next + 5 },
-          { scale: 1, autoAlpha: 1, duration: 1, ease: "power2.out", immediateRender: false },
+          { scale: 1, autoAlpha: 1, duration: 1, ease: "power2.out" },
           "<"
         );
       });
@@ -256,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bottom: "50%",
       xPercent: -50,
       yPercent: -50,
-      scale: 1.8,
+      scale: 1.83,
       duration: 2,
       ease: "power2.inOut",
     })
