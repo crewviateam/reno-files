@@ -87,21 +87,19 @@ document.addEventListener("DOMContentLoaded", () => {
           scrub: 0.5,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
-          onUpdate: (self) => {
-             // Precise toggle for Slide 1 elements to match entry/exit points without a lag
-             const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
-             if (self.isActive || self.progress > 0) {
-               gsap.set(slide1Elements, { autoAlpha: 1 });
-             } else {
-               gsap.set(slide1Elements, { autoAlpha: 0 });
+          onToggle: (self) => {
+             // Symmetrical entry/exit visibility ONLY at the start point
+             // This avoids fighting the scrubbed timeline's own alpha animations later on
+             if (self.progress <= 0.01) {
+                const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
+                gsap.set(slide1Elements, { autoAlpha: self.isActive ? 1 : 0 });
              }
           },
           onRefresh: (self) => {
-             const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
-             if (self.isActive || self.progress > 0) {
-               gsap.set(slide1Elements, { autoAlpha: 1 });
-             } else {
-               gsap.set(slide1Elements, { autoAlpha: 0 });
+             // Hide slide 1 elements only if we are currently above the start point
+             if (self.progress <= 0.01 && !self.isActive) {
+                const slide1Elements = q(".re-imagine_image-1, .re-imagine_image-2, .re-imagine_image-3, .tab_imagine_content_wrapper.is-01");
+                gsap.set(slide1Elements, { autoAlpha: 0 });
              }
           }
         }
