@@ -50,8 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
         scale: 0, autoAlpha: 0, filter: "blur(0px)", overwrite: true
       });
       
-      // Force initial hidden state for all background images
-      gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), {
+      // Force initial hidden state for all background images (excluding UI icons)
+      gsap.set(q(".re-imagine_image-wrap img:not(.app_icons_wrapper), .re-imagine_image-wrap .tab-section_content"), {
         autoAlpha: 0, overwrite: true
       });
 
@@ -81,14 +81,14 @@ document.addEventListener("DOMContentLoaded", () => {
              if (self.isActive || self.progress > 0) {
                gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
              } else {
-               gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
+               gsap.set(q(".re-imagine_image-wrap img:not(.app_icons_wrapper), .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
              }
           },
           onRefresh: (self) => {
              if (self.isActive || self.progress > 0) {
                gsap.set(q(".re-imagine_image-wrap .tab-section_content"), { autoAlpha: 1 });
              } else {
-               gsap.set(q(".re-imagine_image-wrap img, .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
+               gsap.set(q(".re-imagine_image-wrap img:not(.app_icons_wrapper), .re-imagine_image-wrap .tab-section_content"), { autoAlpha: 0 });
              }
           }
         }
@@ -147,8 +147,8 @@ document.addEventListener("DOMContentLoaded", () => {
         yPercent: 0, autoAlpha: 1, duration: 1, ease: "power2.inOut"
       }, "-=0.5");
 
-      // Parallax (Separate from mainTL for continuous effect)
-      q(".re-imagine_image-wrap img").forEach((img, i) => {
+      // Parallax (Separate from mainTL for continuous effect) - Excluding UI icons
+      q(".re-imagine_image-wrap img:not(.app_icons_wrapper)").forEach((img, i) => {
         gsap.to(img, {
           y: () => ((i % 3) * 0.3) * 100,
           scrollTrigger: {
