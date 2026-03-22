@@ -314,74 +314,87 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       });
 
-      // Show cards at start
-      tl.set(cards, { x: 0, y: 0, scale: 1, autoAlpha: 1 }, 0);
-
-      const getTarget = (card, progress) => {
-         const rect = card.getBoundingClientRect();
-         const sRect = stickySec.getBoundingClientRect();
-         const cX = sRect.width / 2;
-         const cY = sRect.height / 1.5;
-         const imgCenterX = rect.left + rect.width / 2 - sRect.left;
-         const imgCenterY = rect.top + rect.height / 2 - sRect.top;
-         const moveX = cX - imgCenterX;
-         const moveY = cY - imgCenterY;
-         return { x: moveX * progress, y: moveY * progress, scale: 1 - 0.2 * progress };
-      };
-
-      // The exact sequence requested
-      const desiredSequence = [4, 2, 3, 1, 5, 0];
-      const mergeOrder = desiredSequence.filter(i => cards[i]); // valid indices only
-      
-      const logoPercents = {4:80, 2:60, 3:50, 1:40, 5:30, 0:0};
-      const stageDuration = 4;
-
-      mergeOrder.forEach((mergingCardIndex, stageIdx) => {
-         const t0 = stageIdx * stageDuration;
-         const mergingCard = cards[mergingCardIndex];
-
-         // 1. Merging card completes its journey
-         tl.to(mergingCard, {
-             x: () => getTarget(mergingCard, 1).x,
-             y: () => getTarget(mergingCard, 1).y,
-             scale: () => getTarget(mergingCard, 1).scale,
-             duration: stageDuration,
-             ease: "power2.inOut"
-         }, t0);
-         
-         // 2. Merging card fades out right at the end of its stage
-         tl.to(mergingCard, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, t0 + stageDuration - 0.5);
-
-         // 3. Remaining cards do their 'half way movement' based on how many stages they have left until they merge
-         const remainingCards = mergeOrder.slice(stageIdx + 1);
-         remainingCards.forEach(remainingIdx => {
-             const rCard = cards[remainingIdx];
-             const itsMergeStage = mergeOrder.indexOf(remainingIdx);
-             const targetProgress = (stageIdx + 1) / (itsMergeStage + 1);
-             
-             tl.to(rCard, {
-                 x: () => getTarget(rCard, targetProgress).x,
-                 y: () => getTarget(rCard, targetProgress).y,
-                 scale: () => getTarget(rCard, targetProgress).scale,
-                 duration: stageDuration,
-                 ease: "power2.inOut"
-             }, t0);
-         });
-
-         // 4. Color logo fill synced with this stage
-         const pct = logoPercents[mergingCardIndex] !== undefined ? logoPercents[mergingCardIndex] : 0;
-         tl.to(colLogo, {
-             clipPath: `inset(0% ${pct}% 0% 0%)`,
-             duration: 1.5,
-             ease: "power2.inOut"
-         }, t0 + stageDuration - 1.5);
+      // 1. CAPTURE INITIAL POSITIONS (Clean relative start coords!)
+      const initialPositions = new Map();
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const sRect = stickySec.getBoundingClientRect();
+        initialPositions.set(card, {
+          x: rect.left - sRect.left,
+          y: rect.top - sRect.top,
+          width: rect.width,
+          height: rect.height
+        });
       });
 
-      // FINAL BRANDING REVEAL (Starts after all cards have merged)
-      const endTime = mergeOrder.length * stageDuration;
-      
+      const getX = (card, mult = 1) => {
+        const sRect = stickySec.getBoundingClientRect();
+        const pos = initialPositions.get(card);
+        const centerX = sRect.width / 2;
+        return (centerX - (pos.x + pos.width / 2)) * mult;
+      };
+
+      const getY = (card, mult = 1) => {
+        const sRect = stickySec.getBoundingClientRect();
+        const pos = initialPositions.get(card);
+        const centerY = sRect.height / 1.5;
+        return (centerY - (pos.y + pos.height / 2)) * mult;
+      };
+
+      // 2. STAGES (Exact required structure)
+      const stage1Card = cards[cards.length - 1]; // First to merge (HTML last)
+      const stage2Card = cards[cards.length - 2]; // Second to merge (HTML 2nd-to-last)
+      const restCards = cards.slice(0, cards.length - 2); // The rest merge together
+
+      tl.set(cards, { x: 0, y: 0, scale: 1, autoAlpha: 1 }, 0);
+
+      const stageDuration = 4;
+
+      // STAGE 1 CARD (Merges in Stage 1)
+      if (stage1Card) {
+        tl.to(stage1Card, {
+          keyframes: [
+            { x: () => getX(stage1Card, 1), y: () => getY(stage1Card, 1), scale: 0.8, duration: stageDuration },
+            { autoAlpha: 0, duration: 0.5 }
+          ],
+          ease: "none"
+        }, 0);
+      }
+
+      // STAGE 2 CARD (Half-way in Stage 1, Merges in Stage 2)
+      if (stage2Card) {
+        tl.to(stage2Card, {
+          keyframes: [
+             { x: () => getX(stage2Card, 0.5), y: () => getY(stage2Card, 0.5), scale: 0.9, duration: stageDuration },
+             { x: () => getX(stage2Card, 1), y: () => getY(stage2Card, 1), scale: 0.8, duration: stageDuration },
+             { autoAlpha: 0, duration: 0.5 }
+          ],
+          ease: "none"
+        }, 0);
+      }
+
+      // REMAINING CARDS (Merge together fully in Stage 3)
+      restCards.forEach(card => {
+        tl.to(card, {
+          keyframes: [
+             { x: () => getX(card, 0.33), y: () => getY(card, 0.33), scale: 0.93, duration: stageDuration },
+             { x: () => getX(card, 0.66), y: () => getY(card, 0.66), scale: 0.86, duration: stageDuration },
+             { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.8, duration: stageDuration },
+             { autoAlpha: 0, duration: 0.5 }
+          ],
+          ease: "none"
+        }, 0);
+      });
+
+      // 3. COLOR LOGO REVEAL (Synced seamlessly with remaining stages)
+      tl.to(colLogo, { clipPath: "inset(0% 66% 0% 0%)", duration: 1, ease: "linear" }, stageDuration - 1)
+        .to(colLogo, { clipPath: "inset(0% 33% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 2) - 1)
+        .to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 3) - 1);
+
+      // FINAL BRANDING REVEAL (Starts after Stage 3 finishes)
+      const endTime = stageDuration * 3;
       tl.to(partnerText, { autoAlpha: 0, duration: 0.8, ease: "power2.out" }, endTime)
-        .to(partnerRLogo, { scale: 0.6, yPercent: 0, duration: 1.5, ease: "power2.inOut" }, endTime) // Smooth scale down without bounce
+        .to(partnerRLogo, { scale: 0.6, yPercent: 0, duration: 1.5, ease: "power2.inOut" }, endTime)
         .to(partnerRLogo, { autoAlpha: 0, duration: 0.8, ease: "power2.out" }, endTime + 0.7)
         .to(colorLogoImg, { autoAlpha: 1, scale: 1, duration: 1.2, transformOrigin: "bottom center", ease: "power2.out" }, endTime + 0.7)
         .to(colorLogoContent, { autoAlpha: 1, yPercent: 0, duration: 0.8, ease: "power2.out" }, endTime + 0.7);
