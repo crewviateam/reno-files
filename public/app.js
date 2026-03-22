@@ -331,72 +331,54 @@ document.addEventListener("DOMContentLoaded", () => {
         return (centerY - imgCenterY) * mult;
       };
 
-      // Flow Indices: [4, 2, 3, 1, 5, 0]
-      const item1Idx = 4;
-      const item2Idx = 2;
-      const restIdxs = [3, 1, 5, 0];
+      // NEW DYNAMIC INDEX LOGIC (Handles any number of images, optimized for your current 5-image setup)
+      const item1 = cards[0];
+      const item2 = cards[1];
+      const rest = Array.from(cards).slice(2);
 
-      // STAGE 1: Item 1 merges (100%), all others fly to 70% on the way
-      if (cards[item1Idx]) {
-        tl.to(cards[item1Idx], {
-          x: () => getX(cards[item1Idx], 1),
-          y: () => getY(cards[item1Idx], 1),
-          autoAlpha: 1, scale: 1, duration: 2, ease: "none"
+      // STAGE 1: FIRST IMAGE SHRINK-MERGE (0s to 3s)
+      if (item1) {
+        tl.to(item1, {
+          keyframes: [
+            { x: () => getX(item1, 1), y: () => getY(item1, 1), scale: 0, autoAlpha: 1, duration: 3 }, // Shrink to center
+            { autoAlpha: 0, duration: 0.1 }
+          ],
+          ease: "none"
         }, 0);
       }
 
-      [item2Idx, ...restIdxs].forEach(idx => {
-        if (!cards[idx]) return;
-        tl.to(cards[idx], {
-          x: () => getX(cards[idx], 0.7),
-          y: () => getY(cards[idx], 0.7),
-          autoAlpha: 1, scale: 0.5, duration: 2, ease: "none"
+      // STAGE 2: SECOND IMAGE SHRINK-MERGE (Path from 0s to 8s)
+      if (item2) {
+        tl.to(item2, {
+          keyframes: [
+            { x: () => getX(item2, 0.7), y: () => getY(item2, 0.7), scale: 0.5, autoAlpha: 1, duration: 3 }, // Stage 1 Pos: Scale 0.5
+            { x: () => getX(item2, 1), y: () => getY(item2, 1), scale: 0, duration: 5 }, // Stage 2 Merge: Shrink to center
+            { autoAlpha: 0, duration: 0.1 }
+          ],
+          ease: "none"
+        }, 0);
+      }
+
+      // STAGE 3: REMAINING IMAGES SHRINK-MERGE (Path from 0s to 13s)
+      rest.forEach((card) => {
+        tl.to(card, {
+          keyframes: [
+            { x: () => getX(card, 0.7), y: () => getY(card, 0.7), scale: 0.5, autoAlpha: 1, duration: 3 }, // Stage 1 Pos: Scale 0.5
+            { x: () => getX(card, 0.8), y: () => getY(card, 0.8), scale: 0.3, duration: 5 }, // Stage 2 Pos: Scale 0.3
+            { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0, duration: 5 }, // Stage 3 Merge: Shrink to center
+            { autoAlpha: 0, duration: 0.1 }
+          ],
+          ease: "none"
         }, 0);
       });
 
-      if (cards[item1Idx]) {
-        tl.to(cards[item1Idx], { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 1.8);
-      }
-      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "power2.out" }, 1.6);
-      
-      // STAGE 2: Item 2 merges (100%), rest move to 80% on the way (Starting exactly at 2.0s to avoid bounce)
-      if (cards[item2Idx]) {
-        tl.to(cards[item2Idx], {
-          x: () => getX(cards[item2Idx], 1),
-          y: () => getY(cards[item2Idx], 1),
-          scale: 1, duration: 1, ease: "none", overwrite: false
-        }, 2.0);
-        
-        restIdxs.forEach(idx => {
-          if (!cards[idx]) return;
-          tl.to(cards[idx], {
-            x: () => getX(cards[idx], 0.8),
-            y: () => getY(cards[idx], 0.8),
-            scale: 0.7, duration: 1, ease: "none", overwrite: false
-          }, 2.0);
-        });
-        
-        tl.to(cards[item2Idx], { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 2.8);
-        tl.to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "power2.out" }, 2.6);
-      }
+      // SYNCED COLOR LOGO REVEAL (Percentages matched to Stage ends)
+      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "power2.out" }, 2.5) // At end of Stage 1
+        .to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "power2.out" }, 7.5) // At end of Stage 2
+        .to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power2.out" }, 12.5); // At end of Stage 3
 
-      // STAGE 3: All remaining logos merge together synchronously (Starting exactly at 3.0s)
-      const stage3Cards = restIdxs.map(idx => cards[idx]).filter(c => !!c);
-      if (stage3Cards.length > 0) {
-        stage3Cards.forEach((card, i) => {
-          tl.to(card, {
-            x: () => getX(card, 1),
-            y: () => getY(card, 1),
-            scale: 1, duration: 1, ease: "none", overwrite: false
-          }, 3.0);
-        });
-        
-        tl.to(stage3Cards, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 3.8);
-        tl.to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power2.out" }, 3.6);
-      }
-
-      // Final Branding Reveal
-      tl.to(partnerText, { autoAlpha: 0, duration: 0.5, ease: "power2.out" })
+      // FINAL BRANDING REVEAL (Starts after all images have merged)
+      tl.to(partnerText, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 13.5)
         .to(partnerRLogo, { yPercent: -100, scale: 1.2, duration: 0.5, ease: "power2.out" })
         .to(partnerRLogo, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
         .to(colorLogoImg, { autoAlpha: 1, scale: 1.5, transformOrigin: "bottom center" })
