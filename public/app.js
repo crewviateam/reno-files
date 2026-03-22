@@ -293,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
     partnerTracks.forEach((track, trackIndex) => {
       const cards = track.querySelectorAll("img.partner-img");
       const stickySec = track.querySelector(".partners_sticky");
-      if (!stickySec) return;
+      if (!stickySec || cards.length === 0) return;
 
       const colLogo = track.querySelector(".color-logo");
       const partnerText = track.querySelector(".partner-text");
@@ -314,40 +314,88 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       });
 
-      const timelineRender = (cardIndex, prcnt) => {
-        const card = cards[cardIndex];
-        if (!card) return;
-
-        tl.to(card, {
-          x: () => {
-             const sectionRect = stickySec.getBoundingClientRect();
-             const centerX = sectionRect.width / 2;
-             const rect = card.getBoundingClientRect();
-             const imgCenterX = rect.left + rect.width / 2 - sectionRect.left;
-             return centerX - imgCenterX;
-          },
-          y: () => {
-             const sectionRect = stickySec.getBoundingClientRect();
-             const centerY = sectionRect.height / 1.5;
-             const rect = card.getBoundingClientRect();
-             const imgCenterY = rect.top + rect.height / 2 - sectionRect.top;
-             return centerY - imgCenterY;
-          },
-          autoAlpha: 1,
-          scale: 1,
-          duration: 2,
-          ease: "none"
-        });
-
-        tl.to(card, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
-        tl.to(colLogo, { clipPath: `inset(0% ${prcnt}% 0% 0%)`, duration: 1, ease: "power2.out" }, "-=0.4");
+      // Helper to calculate distance to center (mult defines journey progress)
+      const getX = (card, mult = 1) => {
+        const sectionRect = stickySec.getBoundingClientRect();
+        const centerX = sectionRect.width / 2;
+        const rect = card.getBoundingClientRect();
+        const imgCenterX = rect.left + rect.width / 2 - sectionRect.left;
+        return (centerX - imgCenterX) * mult;
       };
 
-      [4, 2, 3, 1, 5, 0].forEach((idx, i) => {
-        const percentages = [80, 60, 50, 40, 30, 0];
-        timelineRender(idx, percentages[i]);
+      const getY = (card, mult = 1) => {
+        const sectionRect = stickySec.getBoundingClientRect();
+        const centerY = sectionRect.height / 1.5;
+        const rect = card.getBoundingClientRect();
+        const imgCenterY = rect.top + rect.height / 2 - sectionRect.top;
+        return (centerY - imgCenterY) * mult;
+      };
+
+      // Flow Indices: [4, 2, 3, 1, 5, 0]
+      const item1Idx = 4;
+      const item2Idx = 2;
+      const restIdxs = [3, 1, 5, 0];
+
+      // STAGE 1: Item 1 merges, all others to 80%
+      if (cards[item1Idx]) {
+        tl.to(cards[item1Idx], {
+          x: () => getX(cards[item1Idx], 1),
+          y: () => getY(cards[item1Idx], 1),
+          autoAlpha: 1, scale: 1, duration: 2, ease: "none"
+        }, 0);
+      }
+
+      [item2Idx, ...restIdxs].forEach(idx => {
+        if (!cards[idx]) return;
+        tl.to(cards[idx], {
+          x: () => getX(cards[idx], 0.8),
+          y: () => getY(cards[idx], 0.8),
+          autoAlpha: 1, scale: 1, duration: 2, ease: "none"
+        }, 0);
       });
 
+      if (cards[item1Idx]) {
+        tl.to(cards[item1Idx], { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+      }
+      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "power2.out" }, "-=0.4");
+
+      // STAGE 2: Item 2 merges, rest move to 90%
+      if (cards[item2Idx]) {
+        tl.to(cards[item2Idx], {
+          x: () => getX(cards[item2Idx], 1),
+          y: () => getY(cards[item2Idx], 1),
+          duration: 1, ease: "none"
+        });
+        
+        restIdxs.forEach(idx => {
+          if (!cards[idx]) return;
+          tl.to(cards[idx], {
+            x: () => getX(cards[idx], 0.9),
+            y: () => getY(cards[idx], 0.9),
+            duration: 1, ease: "none"
+          }, "<");
+        });
+        
+        tl.to(cards[item2Idx], { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+        tl.to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "power2.out" }, "-=0.4");
+      }
+
+      // STAGE 3: All remaining logos merge together
+      const stage3Cards = restIdxs.map(idx => cards[idx]).filter(c => !!c);
+      if (stage3Cards.length > 0) {
+        stage3Cards.forEach((card, i) => {
+          tl.to(card, {
+            x: () => getX(card, 1),
+            y: () => getY(card, 1),
+            duration: 1, ease: "none"
+          }, i === 0 ? ">" : "<");
+        });
+        
+        tl.to(stage3Cards, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+        tl.to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power2.out" }, "-=0.4");
+      }
+
+      // Final Branding Reveal
       tl.to(partnerText, { autoAlpha: 0, duration: 0.5, ease: "power2.out" })
         .to(partnerRLogo, { yPercent: -100, scale: 1.2, duration: 0.5, ease: "power2.out" })
         .to(partnerRLogo, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
