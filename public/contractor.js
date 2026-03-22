@@ -199,28 +199,7 @@ function PartnerTrackAnimation() {
     const ghostLogo = partnerTrack.querySelector(".ghost-logo ");
     const colLogo = partnerTrack.querySelector(".color-logo ");
 
-    const sectionRect = stickySec.getBoundingClientRect();
-    const centerX = sectionRect.width / 2;
-    const centerY = sectionRect.height / 1.5;
-
-    const getXandY = (img) => {
-      const rect = img.getBoundingClientRect();
-
-      const imgCenterX = rect.left + rect.width / 2 - sectionRect.left;
-      const imgCenterY = rect.top + rect.height / 2 - sectionRect.top;
-
-      return { moveX: centerX - imgCenterX, moveY: centerY - imgCenterY };
-    };
-
-    const CardAnimation = (img) => {
-      return {
-        x: getXandY(img).moveX,
-        y: getXandY(img).moveY,
-        opacity: 1,
-        scale: 1,
-        duration: 2,
-      };
-    };
+    gsap.set([cards, colLogo], { clearProps: "all" });
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -232,43 +211,86 @@ function PartnerTrackAnimation() {
       },
     });
 
-    const emptyTimeline = () => {
-      tl.to(colLogo, {
-        opacity: 1,
-        duration: 0.5,
-        ease: "power2.out",
+    // 1. CAPTURE INITIAL POSITIONS (Clean relative start coords!)
+    const initialPositions = new Map();
+    cards.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const sRect = stickySec.getBoundingClientRect();
+      initialPositions.set(card, {
+        x: rect.left - sRect.left,
+        y: rect.top - sRect.top,
+        width: rect.width,
+        height: rect.height
       });
+    });
+
+    const getX = (card, mult = 1) => {
+      const sRect = stickySec.getBoundingClientRect();
+      const pos = initialPositions.get(card);
+      const centerX = sRect.width / 2;
+      return (centerX - (pos.x + pos.width / 2)) * mult;
     };
 
-    const timelineRender = (cardIndex, prcnt) => {
-      tl.to(cards[cardIndex], CardAnimation(cards[cardIndex]));
-      tl.to(
-        cards[cardIndex],
-        {
-          opacity: 0,
-          duration: 0.5,
-          ease: "power2.out",
-        },
-        "-=0.2"
-      );
-
-      tl.to(
-        colLogo,
-        {
-          clipPath: `inset(0% ${prcnt}% 0% 0%)`,
-          duration: 1,
-          ease: "power2.out",
-        },
-        "-=0.4"
-      );
+    const getY = (card, mult = 1) => {
+      const sRect = stickySec.getBoundingClientRect();
+      const pos = initialPositions.get(card);
+      const centerY = sRect.height / 1.5;
+      return (centerY - (pos.y + pos.height / 2)) * mult;
     };
 
-    timelineRender(4, 80);
-    timelineRender(2, 60);
-    timelineRender(3, 50);
-    timelineRender(1, 40);
-    timelineRender(5, 30);
-    timelineRender(0, 0);
+    // 2. STAGES (Exact required structure based on array indices)
+    const cardsArray = Array.from(cards);
+    const stage1Card = cardsArray[4]; // First to merge (Last image in HTML)
+    const stage2Card = cardsArray[2]; // Second to merge (3rd last image in HTML)
+    const restCards = cardsArray.filter(c => c !== stage1Card && c !== stage2Card); // The rest merge together
+
+    tl.set(cards, { x: 0, y: 0, scale: 1, autoAlpha: 1 }, 0);
+
+    const stageDuration = 4;
+
+    // STAGE 1 CARD (Merges in Stage 1)
+    if (stage1Card) {
+      tl.to(stage1Card, {
+        keyframes: [
+          { x: () => getX(stage1Card, 1), y: () => getY(stage1Card, 1), scale: 0.5, duration: stageDuration },
+          { scale: 0.2, autoAlpha: 0, duration: 0.5, ease: "power2.in" }
+        ],
+        ease: "none"
+      }, 0);
+    }
+
+    // STAGE 2 CARD (Half-way in Stage 1, Merges in Stage 2)
+    if (stage2Card) {
+      tl.to(stage2Card, {
+        keyframes: [
+           { x: () => getX(stage2Card, 0.5), y: () => getY(stage2Card, 0.5), scale: 0.75, duration: stageDuration },
+           { x: () => getX(stage2Card, 1), y: () => getY(stage2Card, 1), scale: 0.5, duration: stageDuration },
+           { scale: 0.2, autoAlpha: 0, duration: 0.5, ease: "power2.in" }
+        ],
+        ease: "none"
+      }, 0);
+    }
+
+    // REMAINING CARDS (Merge together fully in Stage 3)
+    restCards.forEach(card => {
+      if (!card) return;
+      tl.to(card, {
+        keyframes: [
+           { x: () => getX(card, 0.33), y: () => getY(card, 0.33), scale: 0.83, duration: stageDuration },
+           { x: () => getX(card, 0.66), y: () => getY(card, 0.66), scale: 0.66, duration: stageDuration },
+           { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.5, duration: stageDuration },
+           { scale: 0.2, autoAlpha: 0, duration: 0.5, ease: "power2.in" }
+        ],
+        ease: "none"
+      }, 0);
+    });
+
+    // 3. COLOR LOGO REVEAL (Synced seamlessly with remaining stages)
+    // Use .set at time 0 to avoid immediateRender bugs causing false states before scroll begins
+    tl.set(colLogo, { clipPath: "inset(0% 100% 0% 0%)" }, 0);
+    tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "linear" }, stageDuration - 1)
+      .to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 2) - 1)
+      .to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 3) - 1);
   }, 10);
 }
 PartnerTrackAnimation();
