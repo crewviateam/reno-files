@@ -396,11 +396,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // FINAL BRANDING REVEAL (Starts after Stage 3 finishes)
       const endTime = stageDuration * 3;
-      tl.to(partnerText, { autoAlpha: 0, duration: 0.8, ease: "power2.out" }, endTime)
-        .to(partnerRLogo, { scale: 0.6, yPercent: 0, duration: 1.5, ease: "power2.inOut" }, endTime)
-        .to(partnerRLogo, { autoAlpha: 0, duration: 0.8, ease: "power2.out" }, endTime + 0.7)
-        .to(colorLogoImg, { autoAlpha: 1, scale: 1, duration: 1.2, transformOrigin: "bottom center", ease: "power2.out" }, endTime + 0.7)
-        .to(colorLogoContent, { autoAlpha: 1, yPercent: 0, duration: 0.8, ease: "power2.out" }, endTime + 0.7);
+      
+      tl.to(partnerText, {
+        autoAlpha: 0,
+        duration: 0.5,
+        ease: "power2.out",
+      }, endTime)
+      .to(partnerRLogo, {
+        yPercent: -100,
+        scale: 1.2,
+        duration: 0.5,
+        ease: "power2.out",
+      })
+      .to(partnerRLogo, {
+        autoAlpha: 0,
+        duration: 0.5,
+        ease: "power2.out",
+      }, "-=0.2")
+      .to(colorLogoImg, {
+        autoAlpha: 1,
+        scale: 1.5,
+        duration: 0.5, // GSAP default fallback
+        transformOrigin: "bottom center",
+      })
+      .to(colorLogoContent, {
+        autoAlpha: 1,
+        yPercent: 0,
+        duration: 0.5,
+        ease: "power2.out",
+      });
     });
   }
 
