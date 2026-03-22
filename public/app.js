@@ -354,7 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (stage1Card) {
         tl.to(stage1Card, {
           keyframes: [
-            { x: () => getX(stage1Card, 1), y: () => getY(stage1Card, 1), scale: 0.8, duration: stageDuration },
+            { x: () => getX(stage1Card, 1), y: () => getY(stage1Card, 1), scale: 0.5, duration: stageDuration },
             { autoAlpha: 0, duration: 0.5 }
           ],
           ease: "none"
@@ -365,8 +365,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (stage2Card) {
         tl.to(stage2Card, {
           keyframes: [
-             { x: () => getX(stage2Card, 0.5), y: () => getY(stage2Card, 0.5), scale: 0.9, duration: stageDuration },
-             { x: () => getX(stage2Card, 1), y: () => getY(stage2Card, 1), scale: 0.8, duration: stageDuration },
+             { x: () => getX(stage2Card, 0.5), y: () => getY(stage2Card, 0.5), scale: 0.75, duration: stageDuration },
+             { x: () => getX(stage2Card, 1), y: () => getY(stage2Card, 1), scale: 0.5, duration: stageDuration },
              { autoAlpha: 0, duration: 0.5 }
           ],
           ease: "none"
@@ -378,9 +378,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!card) return;
         tl.to(card, {
           keyframes: [
-             { x: () => getX(card, 0.33), y: () => getY(card, 0.33), scale: 0.93, duration: stageDuration },
-             { x: () => getX(card, 0.66), y: () => getY(card, 0.66), scale: 0.86, duration: stageDuration },
-             { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.8, duration: stageDuration },
+             { x: () => getX(card, 0.33), y: () => getY(card, 0.33), scale: 0.83, duration: stageDuration },
+             { x: () => getX(card, 0.66), y: () => getY(card, 0.66), scale: 0.66, duration: stageDuration },
+             { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.5, duration: stageDuration },
              { autoAlpha: 0, duration: 0.5 }
           ],
           ease: "none"
