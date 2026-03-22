@@ -355,7 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tl.to(stage1Card, {
           keyframes: [
             { x: () => getX(stage1Card, 1), y: () => getY(stage1Card, 1), scale: 0.5, duration: stageDuration },
-            { autoAlpha: 0, duration: 0.5 }
+            { scale: 0.2, autoAlpha: 0, duration: 0.5, ease: "power2.in" }
           ],
           ease: "none"
         }, 0);
@@ -367,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
           keyframes: [
              { x: () => getX(stage2Card, 0.5), y: () => getY(stage2Card, 0.5), scale: 0.75, duration: stageDuration },
              { x: () => getX(stage2Card, 1), y: () => getY(stage2Card, 1), scale: 0.5, duration: stageDuration },
-             { autoAlpha: 0, duration: 0.5 }
+             { scale: 0.2, autoAlpha: 0, duration: 0.5, ease: "power2.in" }
           ],
           ease: "none"
         }, 0);
@@ -381,17 +381,18 @@ document.addEventListener("DOMContentLoaded", () => {
              { x: () => getX(card, 0.33), y: () => getY(card, 0.33), scale: 0.83, duration: stageDuration },
              { x: () => getX(card, 0.66), y: () => getY(card, 0.66), scale: 0.66, duration: stageDuration },
              { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.5, duration: stageDuration },
-             { autoAlpha: 0, duration: 0.5 }
+             { scale: 0.2, autoAlpha: 0, duration: 0.5, ease: "power2.in" }
           ],
           ease: "none"
         }, 0);
       });
 
       // 3. COLOR LOGO REVEAL (Synced seamlessly with remaining stages)
-      // Clamped explicit 'fromTo' so it does not falsely pre-fill early in the scroll timeline!
-      tl.fromTo(colLogo, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "linear" }, stageDuration - 1)
-        .fromTo(colLogo, { clipPath: "inset(0% 80% 0% 0%)" }, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 2) - 1)
-        .fromTo(colLogo, { clipPath: "inset(0% 60% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 3) - 1);
+      // Use .set at time 0 to avoid immediateRender bugs causing false states before scroll begins
+      tl.set(colLogo, { clipPath: "inset(0% 100% 0% 0%)" }, 0);
+      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "linear" }, stageDuration - 1)
+        .to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 2) - 1)
+        .to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 3) - 1);
 
       // FINAL BRANDING REVEAL (Starts after Stage 3 finishes)
       const endTime = stageDuration * 3;
