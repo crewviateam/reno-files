@@ -315,58 +315,75 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // Helper to calculate distance to center (mult defines journey progress)
-      const getX = (card, mult = 1) => {
-        const sectionRect = stickySec.getBoundingClientRect();
-        const centerX = sectionRect.width / 2;
+      // CAPTURE INITIAL POSITIONS (Prevents 'bounce' by ensuring calculations are always from start pos)
+      const initialPositions = new Map();
+      cards.forEach(card => {
         const rect = card.getBoundingClientRect();
-        const imgCenterX = rect.left + rect.width / 2 - sectionRect.left;
+        const sRect = stickySec.getBoundingClientRect();
+        initialPositions.set(card, {
+          x: rect.left - sRect.left,
+          y: rect.top - sRect.top,
+          width: rect.width,
+          height: rect.height
+        });
+      });
+
+      const getX = (card, mult = 1) => {
+        const sRect = stickySec.getBoundingClientRect();
+        const pos = initialPositions.get(card);
+        const centerX = sRect.width / 2;
+        const imgCenterX = pos.x + pos.width / 2;
         return (centerX - imgCenterX) * mult;
       };
 
       const getY = (card, mult = 1) => {
-        const sectionRect = stickySec.getBoundingClientRect();
-        const centerY = sectionRect.height / 1.5;
-        const rect = card.getBoundingClientRect();
-        const imgCenterY = rect.top + rect.height / 2 - sectionRect.top;
+        const sRect = stickySec.getBoundingClientRect();
+        const pos = initialPositions.get(card);
+        const centerY = sRect.height / 1.5;
+        const imgCenterY = pos.y + pos.height / 2;
         return (centerY - imgCenterY) * mult;
       };
 
-      // NEW DYNAMIC INDEX LOGIC (Handles any number of images, optimized for your current 5-image setup)
-      const item1 = cards[0];
-      const item2 = cards[1];
-      const rest = Array.from(cards).slice(2);
+      // NEW DYNAMIC INDEX LOGIC (Reversed order to ensure first/last are correct)
+      const allCards = Array.from(cards).reverse();
+      const item1 = allCards[0];
+      const item2 = allCards[1];
+      const rest = allCards.slice(2);
 
-      // STAGE 1: FIRST IMAGE SHRINK-MERGE (0s to 3s)
+      // Initial Lock
+      tl.set(allCards, { x: 0, y: 0, scale: 1, autoAlpha: 0 }, 0);
+
+      // STAGE 1: FIRST IMAGE MERGE (0-3s)
       if (item1) {
         tl.to(item1, {
           keyframes: [
-            { x: () => getX(item1, 1), y: () => getY(item1, 1), scale: 0, autoAlpha: 1, duration: 3 }, // Shrink to center
-            { autoAlpha: 0, duration: 0.1 }
+            { x: () => getX(item1, 1), y: () => getY(item1, 1), scale: 0.6, autoAlpha: 1, duration: 3 },
+            { autoAlpha: 0, duration: 0.5 }
           ],
           ease: "none"
         }, 0);
       }
 
-      // STAGE 2: SECOND IMAGE SHRINK-MERGE (Path from 0s to 8s)
+      // STAGE 2: SECOND IMAGE MERGE (0-8s path)
       if (item2) {
         tl.to(item2, {
           keyframes: [
-            { x: () => getX(item2, 0.7), y: () => getY(item2, 0.7), scale: 0.5, autoAlpha: 1, duration: 3 }, // Stage 1 Pos: Scale 0.5
-            { x: () => getX(item2, 1), y: () => getY(item2, 1), scale: 0, duration: 5 }, // Stage 2 Merge: Shrink to center
-            { autoAlpha: 0, duration: 0.1 }
+            { x: () => getX(item2, 0.7), y: () => getY(item2, 0.7), scale: 0.6, autoAlpha: 1, duration: 3 },
+            { x: () => getX(item2, 1), y: () => getY(item2, 1), scale: 0.6, duration: 5 },
+            { autoAlpha: 0, duration: 0.5 }
           ],
           ease: "none"
         }, 0);
       }
 
-      // STAGE 3: REMAINING IMAGES SHRINK-MERGE (Path from 0s to 13s)
+      // STAGE 3: REMAINING IMAGES MERGE (0-13s path)
       rest.forEach((card) => {
         tl.to(card, {
           keyframes: [
-            { x: () => getX(card, 0.7), y: () => getY(card, 0.7), scale: 0.5, autoAlpha: 1, duration: 3 }, // Stage 1 Pos: Scale 0.5
-            { x: () => getX(card, 0.8), y: () => getY(card, 0.8), scale: 0.3, duration: 5 }, // Stage 2 Pos: Scale 0.3
-            { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0, duration: 5 }, // Stage 3 Merge: Shrink to center
-            { autoAlpha: 0, duration: 0.1 }
+            { x: () => getX(card, 0.7), y: () => getY(card, 0.7), scale: 0.6, autoAlpha: 1, duration: 3 },
+            { x: () => getX(card, 0.8), y: () => getY(card, 0.8), scale: 0.6, duration: 5 },
+            { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.6, duration: 5 },
+            { autoAlpha: 0, duration: 0.5 }
           ],
           ease: "none"
         }, 0);
