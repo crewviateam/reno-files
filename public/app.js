@@ -314,8 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       });
 
-      // Helper to calculate distance to center (mult defines journey progress)
-      // CAPTURE INITIAL POSITIONS (Prevents 'bounce' by ensuring calculations are always from start pos)
+      // 1. CAPTURE INITIAL POSITIONS (Fixes the bounce by locking relative start coordinates)
       const initialPositions = new Map();
       cards.forEach(card => {
         const rect = card.getBoundingClientRect();
@@ -332,67 +331,72 @@ document.addEventListener("DOMContentLoaded", () => {
         const sRect = stickySec.getBoundingClientRect();
         const pos = initialPositions.get(card);
         const centerX = sRect.width / 2;
-        const imgCenterX = pos.x + pos.width / 2;
-        return (centerX - imgCenterX) * mult;
+        return (centerX - (pos.x + pos.width / 2)) * mult;
       };
 
       const getY = (card, mult = 1) => {
         const sRect = stickySec.getBoundingClientRect();
         const pos = initialPositions.get(card);
         const centerY = sRect.height / 1.5;
-        const imgCenterY = pos.y + pos.height / 2;
-        return (centerY - imgCenterY) * mult;
+        return (centerY - (pos.y + pos.height / 2)) * mult;
       };
 
-      // NEW DYNAMIC INDEX LOGIC (Reversed order to ensure first/last are correct)
+      // 2. DEFINE STAGES (Reversed order to fix 'reverse fetching' issue)
       const allCards = Array.from(cards).reverse();
       const item1 = allCards[0];
       const item2 = allCards[1];
       const rest = allCards.slice(2);
 
-      // Initial Lock
+      // Lock starting state
       tl.set(allCards, { x: 0, y: 0, scale: 1, autoAlpha: 0 }, 0);
 
-      // STAGE 1: FIRST IMAGE MERGE (0-3s)
+      // STAGE 1: FIRST IMAGE MERGE (0s to 3s)
       if (item1) {
         tl.to(item1, {
           keyframes: [
-            { x: () => getX(item1, 1), y: () => getY(item1, 1), scale: 0.6, autoAlpha: 1, duration: 3 },
-            { autoAlpha: 0, duration: 0.5 }
+            { x: () => getX(item1, 1), y: () => getY(item1, 1), scale: 0.8, autoAlpha: 1, duration: 3 },
+            { autoAlpha: 0, duration: 0.1 }
           ],
           ease: "none"
         }, 0);
       }
 
-      // STAGE 2: SECOND IMAGE MERGE (0-8s path)
+      // STAGE 2: SECOND IMAGE MERGE (0s to 8s path)
       if (item2) {
         tl.to(item2, {
           keyframes: [
-            { x: () => getX(item2, 0.7), y: () => getY(item2, 0.7), scale: 0.6, autoAlpha: 1, duration: 3 },
-            { x: () => getX(item2, 1), y: () => getY(item2, 1), scale: 0.6, duration: 5 },
-            { autoAlpha: 0, duration: 0.5 }
+            { x: () => getX(item2, 0.7), y: () => getY(item2, 0.7), scale: 0.7, autoAlpha: 1, duration: 3 }, // Move to Stage 1 Pos
+            { x: () => getX(item2, 1), y: () => getY(item2, 1), scale: 0.8, duration: 5 }, // Merge in Stage 2 (Keep 0.8 scale)
+            { autoAlpha: 0, duration: 0.1 }
           ],
           ease: "none"
         }, 0);
       }
 
-      // STAGE 3: REMAINING IMAGES MERGE (0-13s path)
+      // STAGE 3: REMAINING IMAGES MERGE (0s to 13s path)
       rest.forEach((card) => {
         tl.to(card, {
           keyframes: [
-            { x: () => getX(card, 0.7), y: () => getY(card, 0.7), scale: 0.6, autoAlpha: 1, duration: 3 },
-            { x: () => getX(card, 0.8), y: () => getY(card, 0.8), scale: 0.6, duration: 5 },
-            { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.6, duration: 5 },
-            { autoAlpha: 0, duration: 0.5 }
+            { x: () => getX(card, 0.7), y: () => getY(card, 0.7), scale: 0.7, autoAlpha: 1, duration: 3 }, // Move to Stage 1 Pos
+            { x: () => getX(card, 0.8), y: () => getY(card, 0.8), scale: 0.8, duration: 5 }, // Move to Stage 2 Pos
+            { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.8, duration: 5 }, // Merge in Stage 3 (Keep 0.8 scale)
+            { autoAlpha: 0, duration: 0.1 }
           ],
           ease: "none"
         }, 0);
       });
 
-      // SYNCED COLOR LOGO REVEAL (Percentages matched to Stage ends)
-      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "power2.out" }, 2.5) // At end of Stage 1
-        .to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "power2.out" }, 7.5) // At end of Stage 2
-        .to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power2.out" }, 12.5); // At end of Stage 3
+      // SYNCED COLOR LOGO REVEAL
+      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "linear" }, 2.9)
+        .to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "linear" }, 7.9)
+        .to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "linear" }, 12.9);
+
+      // FINAL BRANDING REVEAL
+      tl.to(partnerText, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 13.5)
+        .to(partnerRLogo, { yPercent: -100, scale: 1.2, duration: 0.5, ease: "power2.out" })
+        .to(partnerRLogo, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
+        .to(colorLogoImg, { autoAlpha: 1, scale: 1.5, transformOrigin: "bottom center" })
+        .to(colorLogoContent, { autoAlpha: 1, yPercent: 0, duration: 0.5, ease: "power2.out" }); // At end of Stage 3
 
       // FINAL BRANDING REVEAL (Starts after all images have merged)
       tl.to(partnerText, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 13.5)
