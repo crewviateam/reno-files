@@ -341,10 +341,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return (centerY - (pos.y + pos.height / 2)) * mult;
       };
 
-      // 2. STAGES (Exact required structure)
-      const stage1Card = cards[cards.length - 1]; // First to merge (HTML last)
-      const stage2Card = cards[cards.length - 2]; // Second to merge (HTML 2nd-to-last)
-      const restCards = cards.slice(0, cards.length - 2); // The rest merge together
+      // 2. STAGES (Exact required structure based on array indices)
+      const stage1Card = cards[4]; // First to merge (Last image in HTML)
+      const stage2Card = cards[2]; // Second to merge (3rd last image in HTML)
+      const restCards = [cards[0], cards[1], cards[3]].filter(Boolean); // The rest merge together
 
       tl.set(cards, { x: 0, y: 0, scale: 1, autoAlpha: 1 }, 0);
 
@@ -375,6 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // REMAINING CARDS (Merge together fully in Stage 3)
       restCards.forEach(card => {
+        if (!card) return;
         tl.to(card, {
           keyframes: [
              { x: () => getX(card, 0.33), y: () => getY(card, 0.33), scale: 0.93, duration: stageDuration },
@@ -387,9 +388,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // 3. COLOR LOGO REVEAL (Synced seamlessly with remaining stages)
-      tl.to(colLogo, { clipPath: "inset(0% 66% 0% 0%)", duration: 1, ease: "linear" }, stageDuration - 1)
-        .to(colLogo, { clipPath: "inset(0% 33% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 2) - 1)
-        .to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 3) - 1);
+      // Clamped explicit 'fromTo' so it does not falsely pre-fill early in the scroll timeline!
+      tl.fromTo(colLogo, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "linear" }, stageDuration - 1)
+        .fromTo(colLogo, { clipPath: "inset(0% 80% 0% 0%)" }, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 2) - 1)
+        .fromTo(colLogo, { clipPath: "inset(0% 60% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "linear" }, (stageDuration * 3) - 1);
 
       // FINAL BRANDING REVEAL (Starts after Stage 3 finishes)
       const endTime = stageDuration * 3;
