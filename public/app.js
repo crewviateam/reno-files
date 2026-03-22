@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const partnerTracks = activePane.querySelectorAll("[data-partner-track]");
     partnerTracks.forEach((track, trackIndex) => {
-      const cards = track.querySelectorAll("img.partner-img");
+      const cards = Array.from(track.querySelectorAll("img.partner-img"));
       const stickySec = track.querySelector(".partners_sticky");
       if (!stickySec || cards.length === 0) return;
 
@@ -314,96 +314,77 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       });
 
-      // 1. CAPTURE INITIAL POSITIONS (Fixes the bounce by locking relative start coordinates)
-      const initialPositions = new Map();
-      cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const sRect = stickySec.getBoundingClientRect();
-        initialPositions.set(card, {
-          x: rect.left - sRect.left,
-          y: rect.top - sRect.top,
-          width: rect.width,
-          height: rect.height
-        });
-      });
+      // Show cards at start
+      tl.set(cards, { x: 0, y: 0, scale: 1, autoAlpha: 1 }, 0);
 
-      const getX = (card, mult = 1) => {
-        const sRect = stickySec.getBoundingClientRect();
-        const pos = initialPositions.get(card);
-        const centerX = sRect.width / 2;
-        return (centerX - (pos.x + pos.width / 2)) * mult;
+      const getTarget = (card, progress) => {
+         const rect = card.getBoundingClientRect();
+         const sRect = stickySec.getBoundingClientRect();
+         const cX = sRect.width / 2;
+         const cY = sRect.height / 1.5;
+         const imgCenterX = rect.left + rect.width / 2 - sRect.left;
+         const imgCenterY = rect.top + rect.height / 2 - sRect.top;
+         const moveX = cX - imgCenterX;
+         const moveY = cY - imgCenterY;
+         return { x: moveX * progress, y: moveY * progress, scale: 1 - 0.2 * progress };
       };
 
-      const getY = (card, mult = 1) => {
-        const sRect = stickySec.getBoundingClientRect();
-        const pos = initialPositions.get(card);
-        const centerY = sRect.height / 1.5;
-        return (centerY - (pos.y + pos.height / 2)) * mult;
-      };
+      // The exact sequence requested
+      const desiredSequence = [4, 2, 3, 1, 5, 0];
+      const mergeOrder = desiredSequence.filter(i => cards[i]); // valid indices only
+      
+      const logoPercents = {4:80, 2:60, 3:50, 1:40, 5:30, 0:0};
+      const stageDuration = 4;
 
-      // 2. DEFINE STAGES (Reversed order to fix 'reverse fetching' issue)
-      const allCards = Array.from(cards).reverse();
-      const item1 = allCards[0];
-      const item2 = allCards[1];
-      const rest = allCards.slice(2);
+      mergeOrder.forEach((mergingCardIndex, stageIdx) => {
+         const t0 = stageIdx * stageDuration;
+         const mergingCard = cards[mergingCardIndex];
 
-      // Lock starting state
-      tl.set(allCards, { x: 0, y: 0, scale: 1, autoAlpha: 0 }, 0);
+         // 1. Merging card completes its journey
+         tl.to(mergingCard, {
+             x: () => getTarget(mergingCard, 1).x,
+             y: () => getTarget(mergingCard, 1).y,
+             scale: () => getTarget(mergingCard, 1).scale,
+             duration: stageDuration,
+             ease: "power2.inOut"
+         }, t0);
+         
+         // 2. Merging card fades out right at the end of its stage
+         tl.to(mergingCard, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, t0 + stageDuration - 0.5);
 
-      // STAGE 1: FIRST IMAGE MERGE (0s to 3s)
-      if (item1) {
-        tl.to(item1, {
-          keyframes: [
-            { x: () => getX(item1, 1), y: () => getY(item1, 1), scale: 0.8, autoAlpha: 1, duration: 3 },
-            { autoAlpha: 0, duration: 0.1 }
-          ],
-          ease: "none"
-        }, 0);
-      }
+         // 3. Remaining cards do their 'half way movement' based on how many stages they have left until they merge
+         const remainingCards = mergeOrder.slice(stageIdx + 1);
+         remainingCards.forEach(remainingIdx => {
+             const rCard = cards[remainingIdx];
+             const itsMergeStage = mergeOrder.indexOf(remainingIdx);
+             const targetProgress = (stageIdx + 1) / (itsMergeStage + 1);
+             
+             tl.to(rCard, {
+                 x: () => getTarget(rCard, targetProgress).x,
+                 y: () => getTarget(rCard, targetProgress).y,
+                 scale: () => getTarget(rCard, targetProgress).scale,
+                 duration: stageDuration,
+                 ease: "power2.inOut"
+             }, t0);
+         });
 
-      // STAGE 2: SECOND IMAGE MERGE (0s to 8s path)
-      if (item2) {
-        tl.to(item2, {
-          keyframes: [
-            { x: () => getX(item2, 0.7), y: () => getY(item2, 0.7), scale: 0.7, autoAlpha: 1, duration: 3 }, // Move to Stage 1 Pos
-            { x: () => getX(item2, 1), y: () => getY(item2, 1), scale: 0.8, duration: 5 }, // Merge in Stage 2 (Keep 0.8 scale)
-            { autoAlpha: 0, duration: 0.1 }
-          ],
-          ease: "none"
-        }, 0);
-      }
-
-      // STAGE 3: REMAINING IMAGES MERGE (0s to 13s path)
-      rest.forEach((card) => {
-        tl.to(card, {
-          keyframes: [
-            { x: () => getX(card, 0.7), y: () => getY(card, 0.7), scale: 0.7, autoAlpha: 1, duration: 3 }, // Move to Stage 1 Pos
-            { x: () => getX(card, 0.8), y: () => getY(card, 0.8), scale: 0.8, duration: 5 }, // Move to Stage 2 Pos
-            { x: () => getX(card, 1), y: () => getY(card, 1), scale: 0.8, duration: 5 }, // Merge in Stage 3 (Keep 0.8 scale)
-            { autoAlpha: 0, duration: 0.1 }
-          ],
-          ease: "none"
-        }, 0);
+         // 4. Color logo fill synced with this stage
+         const pct = logoPercents[mergingCardIndex] !== undefined ? logoPercents[mergingCardIndex] : 0;
+         tl.to(colLogo, {
+             clipPath: `inset(0% ${pct}% 0% 0%)`,
+             duration: 1.5,
+             ease: "power2.inOut"
+         }, t0 + stageDuration - 1.5);
       });
 
-      // SYNCED COLOR LOGO REVEAL
-      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "linear" }, 2.9)
-        .to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "linear" }, 7.9)
-        .to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "linear" }, 12.9);
-
-      // FINAL BRANDING REVEAL
-      tl.to(partnerText, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 13.5)
-        .to(partnerRLogo, { yPercent: -100, scale: 1.2, duration: 0.5, ease: "power2.out" })
-        .to(partnerRLogo, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
-        .to(colorLogoImg, { autoAlpha: 1, scale: 1.5, transformOrigin: "bottom center" })
-        .to(colorLogoContent, { autoAlpha: 1, yPercent: 0, duration: 0.5, ease: "power2.out" }); // At end of Stage 3
-
-      // FINAL BRANDING REVEAL (Starts after all images have merged)
-      tl.to(partnerText, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 13.5)
-        .to(partnerRLogo, { yPercent: -100, scale: 1.2, duration: 0.5, ease: "power2.out" })
-        .to(partnerRLogo, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
-        .to(colorLogoImg, { autoAlpha: 1, scale: 1.5, transformOrigin: "bottom center" })
-        .to(colorLogoContent, { autoAlpha: 1, yPercent: 0, duration: 0.5, ease: "power2.out" });
+      // FINAL BRANDING REVEAL (Starts after all cards have merged)
+      const endTime = mergeOrder.length * stageDuration;
+      
+      tl.to(partnerText, { autoAlpha: 0, duration: 0.8, ease: "power2.out" }, endTime)
+        .to(partnerRLogo, { scale: 0.6, yPercent: 0, duration: 1.5, ease: "power2.inOut" }, endTime) // Smooth scale down without bounce
+        .to(partnerRLogo, { autoAlpha: 0, duration: 0.8, ease: "power2.out" }, endTime + 0.7)
+        .to(colorLogoImg, { autoAlpha: 1, scale: 1, duration: 1.2, transformOrigin: "bottom center", ease: "power2.out" }, endTime + 0.7)
+        .to(colorLogoContent, { autoAlpha: 1, yPercent: 0, duration: 0.8, ease: "power2.out" }, endTime + 0.7);
     });
   }
 
