@@ -350,53 +350,49 @@ document.addEventListener("DOMContentLoaded", () => {
         tl.to(cards[idx], {
           x: () => getX(cards[idx], 0.7),
           y: () => getY(cards[idx], 0.7),
-          autoAlpha: 1, scale: 0.7, duration: 2, ease: "none"
+          autoAlpha: 1, scale: 0.5, duration: 2, ease: "none"
         }, 0);
       });
 
       if (cards[item1Idx]) {
-        tl.to(cards[item1Idx], { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+        tl.to(cards[item1Idx], { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 1.8);
       }
-      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "power2.out" }, "-=0.4");
+      tl.to(colLogo, { clipPath: "inset(0% 80% 0% 0%)", duration: 1, ease: "power2.out" }, 1.6);
       
-      tl.addLabel("stage2", 2.0); // Exact start at end of stage 1 movement
-
-      // STAGE 2: Item 2 merges (100%), rest move to 80% on the way
+      // STAGE 2: Item 2 merges (100%), rest move to 80% on the way (Starting exactly at 2.0s to avoid bounce)
       if (cards[item2Idx]) {
         tl.to(cards[item2Idx], {
           x: () => getX(cards[item2Idx], 1),
           y: () => getY(cards[item2Idx], 1),
-          scale: 1, duration: 1, ease: "none"
-        }, "stage2");
+          scale: 1, duration: 1, ease: "none", overwrite: false
+        }, 2.0);
         
         restIdxs.forEach(idx => {
           if (!cards[idx]) return;
           tl.to(cards[idx], {
             x: () => getX(cards[idx], 0.8),
             y: () => getY(cards[idx], 0.8),
-            scale: 0.8, duration: 1, ease: "none"
-          }, "stage2");
+            scale: 0.7, duration: 1, ease: "none", overwrite: false
+          }, 2.0);
         });
         
-        tl.to(cards[item2Idx], { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "stage2+=0.8");
-        tl.to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "power2.out" }, "stage2+=0.6");
+        tl.to(cards[item2Idx], { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 2.8);
+        tl.to(colLogo, { clipPath: "inset(0% 60% 0% 0%)", duration: 1, ease: "power2.out" }, 2.6);
       }
 
-      tl.addLabel("stage3", "stage2+=1.0");
-
-      // STAGE 3: All remaining logos merge together synchronously
+      // STAGE 3: All remaining logos merge together synchronously (Starting exactly at 3.0s)
       const stage3Cards = restIdxs.map(idx => cards[idx]).filter(c => !!c);
       if (stage3Cards.length > 0) {
         stage3Cards.forEach((card, i) => {
           tl.to(card, {
             x: () => getX(card, 1),
             y: () => getY(card, 1),
-            scale: 1, duration: 1, ease: "none"
-          }, "stage3");
+            scale: 1, duration: 1, ease: "none", overwrite: false
+          }, 3.0);
         });
         
-        tl.to(stage3Cards, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, "stage3+=0.8");
-        tl.to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power2.out" }, "stage3+=0.6");
+        tl.to(stage3Cards, { autoAlpha: 0, duration: 0.5, ease: "power2.out" }, 3.8);
+        tl.to(colLogo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power2.out" }, 3.6);
       }
 
       // Final Branding Reveal
