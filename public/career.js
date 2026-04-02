@@ -15,10 +15,13 @@ function CareerSecAnimation() {
       const textContainer = document.querySelector(".career-revolving-text");
       const words = textContainer.querySelectorAll("span");
 
-      // Use yPercent so movement is relative to the element's own height,
-      // not the wrapper's pixel height (which can be huge on mobile layouts).
+      const lineHeight = wrapper.offsetHeight;
+
+      console.log("lineHeight", lineHeight);
+
+      // Set initial positions
       gsap.set(words, {
-        yPercent: 120,
+        y: lineHeight,
         opacity: 0,
       });
 
@@ -26,12 +29,12 @@ function CareerSecAnimation() {
 
       words.forEach((word) => {
         tl.to(word, {
-          yPercent: 0,
+          y: 0,
           opacity: 1,
           duration: 0.6,
           ease: "power3.out",
         }).to(word, {
-          yPercent: -120,
+          y: -lineHeight,
           opacity: 0,
           duration: 0.6,
           ease: "power3.in",
