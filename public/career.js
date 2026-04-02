@@ -15,26 +15,14 @@ function CareerSecAnimation() {
       const textContainer = document.querySelector(".career-revolving-text");
       const words = textContainer.querySelectorAll("span");
 
-      // Use yPercent for bulletproof responsive movement without calculating pixels
-      const isMobile = window.innerWidth <= 767;
-
-      // Set initial positions
-      // Start slightly lower (100-120%) so it cleanly enters the view box
+      // Use yPercent so movement is relative to the element's own height,
+      // not the wrapper's pixel height (which can be huge on mobile layouts).
       gsap.set(words, {
         yPercent: 120,
         opacity: 0,
       });
 
-      // Added ScrollTrigger so the text animation ONLY begins when the user
-      // actually scrolls the section into view. This prevents the timeline from 
-      // looping off-screen and leaving a "blank" screen when they finally reach it.
-      let tl = gsap.timeline({ 
-        repeat: -1,
-        scrollTrigger: {
-          trigger: wrapper,
-          start: "top 85%", // starts when wrapper enters bottom 15% of screen
-        }
-      });
+      let tl = gsap.timeline({ repeat: -1 });
 
       words.forEach((word) => {
         tl.to(word, {
