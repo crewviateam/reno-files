@@ -15,13 +15,22 @@ function CareerSecAnimation() {
       const textContainer = document.querySelector(".career-revolving-text");
       const words = textContainer.querySelectorAll("span");
 
-      const lineHeight = wrapper.offsetHeight;
+      // On mobile (<= 767), wrapper.offsetHeight might be unusually large (e.g. elements wrapping),
+      // which causes the text to move from far below, appear late, and move suddenly.
+      // We clamp/override the distance for mobile layouts to match local text height.
+      const isMobile = window.innerWidth <= 767;
+      let moveDist = wrapper.offsetHeight;
+      if (isMobile) {
+        moveDist = words.length > 0 && words[0].offsetHeight > 0 ? words[0].offsetHeight * 1.2 : 50;
+        // Cap the distance max to prevent any strange calculations
+        if (moveDist > 80) moveDist = 50;
+      }
 
-      console.log("lineHeight", lineHeight);
+      console.log("career moveDist", moveDist);
 
       // Set initial positions
       gsap.set(words, {
-        y: lineHeight,
+        y: moveDist,
         opacity: 0,
       });
 
@@ -34,7 +43,7 @@ function CareerSecAnimation() {
           duration: 0.6,
           ease: "power3.out",
         }).to(word, {
-          y: -lineHeight,
+          y: -moveDist,
           opacity: 0,
           duration: 0.6,
           ease: "power3.in",
