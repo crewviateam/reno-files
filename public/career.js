@@ -15,35 +15,35 @@ function CareerSecAnimation() {
       const textContainer = document.querySelector(".career-revolving-text");
       const words = textContainer.querySelectorAll("span");
 
-      // On mobile (<= 767), wrapper.offsetHeight might be unusually large (e.g. elements wrapping),
-      // which causes the text to move from far below, appear late, and move suddenly.
-      // We clamp/override the distance for mobile layouts to match local text height.
+      // Use yPercent for bulletproof responsive movement without calculating pixels
       const isMobile = window.innerWidth <= 767;
-      let moveDist = wrapper.offsetHeight;
-      if (isMobile) {
-        moveDist = words.length > 0 && words[0].offsetHeight > 0 ? words[0].offsetHeight * 1.2 : 50;
-        // Cap the distance max to prevent any strange calculations
-        if (moveDist > 80) moveDist = 50;
-      }
-
-      console.log("career moveDist", moveDist);
 
       // Set initial positions
+      // Start slightly lower (100-120%) so it cleanly enters the view box
       gsap.set(words, {
-        y: moveDist,
+        yPercent: 120,
         opacity: 0,
       });
 
-      let tl = gsap.timeline({ repeat: -1 });
+      // Added ScrollTrigger so the text animation ONLY begins when the user
+      // actually scrolls the section into view. This prevents the timeline from 
+      // looping off-screen and leaving a "blank" screen when they finally reach it.
+      let tl = gsap.timeline({ 
+        repeat: -1,
+        scrollTrigger: {
+          trigger: wrapper,
+          start: "top 85%", // starts when wrapper enters bottom 15% of screen
+        }
+      });
 
       words.forEach((word) => {
         tl.to(word, {
-          y: 0,
+          yPercent: 0,
           opacity: 1,
           duration: 0.6,
           ease: "power3.out",
         }).to(word, {
-          y: -moveDist,
+          yPercent: -120,
           opacity: 0,
           duration: 0.6,
           ease: "power3.in",
