@@ -245,6 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!tabSpaceDiv) return;
 
     gsap.set(tabMenu, { clearProps: "all" });
+    tabMenu.classList.remove("choose-text", "blur-bg");
 
     const tabTl = gsap.timeline({
       scrollTrigger: {
@@ -266,19 +267,32 @@ document.addEventListener("DOMContentLoaded", () => {
       duration: 2,
       ease: "power2.inOut",
     })
-    .call(() => tabMenu.classList.add("choose-text"), null, ">")
+    .call(() => {
+      tabMenu.classList.add("choose-text");
+      tabMenu.classList.remove("blur-bg");
+    }, null, ">")
     .to({}, { duration: 1.5 })
     .call(() => tabMenu.classList.remove("choose-text"), null, ">")
     .to(tabMenu, { autoAlpha: 0, duration: 0.3, ease: "power1.out" })
     .set(tabMenu, { bottom: "5%", left: "50%", xPercent: -50, yPercent: 0, scale: 1 })
+    .call(() => tabMenu.classList.add("blur-bg"), null, ">")
     .to(tabMenu, { autoAlpha: 1, duration: 0.4, ease: "power2.out" });
     
     tabTl.eventCallback("onUpdate", () => {
        const progress = tabTl.progress();
+       
+       // Handle choose-text (Active between 30% and 80%)
        if (progress > 0.3 && progress < 0.8) {
           tabMenu.classList.add("choose-text");
        } else {
           tabMenu.classList.remove("choose-text");
+       }
+
+       // Handle blur-bg (Only active in bottom center stage, > 90%)
+       if (progress >= 0.9) {
+          tabMenu.classList.add("blur-bg");
+       } else {
+          tabMenu.classList.remove("blur-bg");
        }
     });
   }
