@@ -1,17 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   gsap.registerPlugin(ScrollTrigger);
 
-  // Store the true original parent of the tab menu ONCE so it's never
-  // incorrectly re-captured after a reparent (e.g. tab switch while in calc).
-  const tabMenuTrueParent = (() => {
-    const m = document.querySelector(".w-tab-menu");
-    return m ? m.parentElement : null;
-  })();
-
-  // Incremented on every initAll() call. Used to cancel stale rAF callbacks
-  // from a previous init cycle (e.g. pending onRefresh rAF after tab switch).
-  let initGeneration = 0;
-
   // 1. UTILITIES (Idempotent AED sign logic)
   function setupAedSigns() {
     const elements = document.querySelectorAll(
@@ -290,9 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .to(tabMenu, { autoAlpha: 1, duration: 0.4, ease: "power2.out" });
     
     tabTl.eventCallback("onUpdate", () => {
-       // Do nothing if menu has been moved into the calc section
-       if (tabMenu.classList.contains("is-in-calc")) return;
-
        const progress = tabTl.progress();
        
        // Handle choose-text (Active between 30% and 80%)
@@ -309,87 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
           tabMenu.classList.remove("blur-bg");
        }
     });
-
-    // --- Reparenting Logic ---
-    const calcSec = activePane.querySelector(".app-calc-sec");
-    const calcTarget = activePane.querySelector(".calc-tabs-wrap");
-
-    // Properties we override with !important when in calc.
-    // Using setProperty per-property means GSAP's OTHER inline styles survive.
-    const CALC_PROPS = {
-      position: "static",
-      transform: "none",
-      left: "auto",
-      bottom: "auto",
-      top: "auto",
-      right: "auto",
-      opacity: "1",
-      visibility: "visible"
-    };
-
-    if (calcSec && calcTarget && tabMenuTrueParent) {
-      const myGeneration = initGeneration;
-      let rAFPending = false;
-
-      const applyCalcState = () => {
-        calcTarget.appendChild(tabMenu);
-        // Override EACH property with !important individually.
-        // This does NOT clear GSAP's other inline style properties —
-        // they are preserved and will snap back correctly on revert.
-        Object.entries(CALC_PROPS).forEach(([prop, val]) => {
-          tabMenu.style.setProperty(prop, val, "important");
-        });
-        tabMenu.classList.add("is-in-calc");
-        tabMenu.classList.remove("choose-text", "blur-bg");
-        if (tabTl.scrollTrigger) tabTl.scrollTrigger.disable(false);
-      };
-
-      const revertCalcState = () => {
-        tabMenuTrueParent.appendChild(tabMenu);
-        // Remove ONLY the !important overrides — GSAP's inline styles
-        // for left/bottom/transform etc. snap back with zero lag.
-        Object.keys(CALC_PROPS).forEach(prop => {
-          tabMenu.style.removeProperty(prop);
-        });
-        tabMenu.classList.remove("is-in-calc", "choose-text", "blur-bg");
-        if (tabTl.scrollTrigger) {
-          // Force the timeline to immediately render at the correct scrub
-          // position BEFORE re-enabling, so there is no animated transition
-          // from a stale state (which caused the glitch/bounce).
-          const st = tabTl.scrollTrigger;
-          tabTl.scrollTrigger.enable();
-          // Immediately seek to the scroll-position-mapped progress (no scrub lag)
-          const rawProg = Math.min(Math.max(
-            (window.scrollY - st.start) / (st.end - st.start), 0), 1);
-          tabTl.progress(rawProg, true);
-        }
-      };
-
-      ScrollTrigger.create({
-        id: "menuReparentTrigger",
-        trigger: calcSec,
-        start: "top bottom",
-        onEnter: applyCalcState,
-        onLeaveBack: revertCalcState,
-        onRefresh(self) {
-          if (rAFPending) return;
-          rAFPending = true;
-          requestAnimationFrame(() => {
-            rAFPending = false;
-            if (initGeneration !== myGeneration) return;
-            if (self.progress > 0) {
-              applyCalcState();
-            } else if (tabMenu.classList.contains("is-in-calc")) {
-              revertCalcState();
-            }
-          });
-        }
-      });
-    }
   }
-
-
-
 
   /* ----------------------------------
     4. PARTNER TRACK ANIMATION
@@ -581,20 +487,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- INITIALIZATION ---
   function initAll() {
     ScrollTrigger.getAll().forEach(st => st.kill());
-
-    // Increment generation: any pending rAF from a previous init cycle
-    // will see initGeneration !== myGeneration and self-abort.
-    initGeneration++;
-
-    // Before re-initializing, always reset the tab menu to its true original
-    // parent and clean state. This handles tab switches while the menu was
-    // reparented into the calc section — prevents stale parent bugs.
-    const tabMenu = document.querySelector(".w-tab-menu");
-    if (tabMenu && tabMenuTrueParent && tabMenu.parentElement !== tabMenuTrueParent) {
-      tabMenuTrueParent.appendChild(tabMenu);
-      tabMenu.removeAttribute("style");
-      tabMenu.classList.remove("is-in-calc", "choose-text", "blur-bg");
-    }
     
     const activePane = document.querySelector(".w-tab-pane.w--tab-active");
     if (activePane) {
