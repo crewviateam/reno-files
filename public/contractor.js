@@ -66,14 +66,24 @@ const swiper = new Swiper(".ctr_industory_slider_wrap.swiper", {
   autoplay: {
     delay: 4500,
   },
+  breakpoints: {
+    0: {
+      slidesPerView: 1.35,
+      spaceBetween: 10,
+    },
+    768: {
+      slidesPerView: "auto",
+      spaceBetween: 0,
+    },
+  },
   on: {
     progress(swiper) {
       const isMobile = window.innerWidth <= 767;
-      // Mobile: smaller translate so adjacent cards peek in from sides (Figma match)
-      // Desktop: original values unchanged
-      const scaleStep = isMobile ? 0.1 : 0.175;
-      const translateMult = isMobile ? 18 : 40;
-      const opacityThreshold = isMobile ? 1.5 : 2.9;
+      // Desktop: original stacking effect with deep overlap
+      // Mobile: Swiper handles peek via slidesPerView:1.35, only subtle depth here
+      const scaleStep = isMobile ? 0.08 : 0.175;
+      const translateMult = isMobile ? 5 : 40;
+      const opacityThreshold = isMobile ? 1.8 : 2.9;
 
       const zIndexMax = swiper.slides.length;
       for (let i = 0; i < swiper.slides.length; i += 1) {
