@@ -68,8 +68,8 @@ const swiper = new Swiper(".ctr_industory_slider_wrap.swiper", {
   },
   breakpoints: {
     0: {
-      slidesPerView: 1.35,
-      spaceBetween: 10,
+      slidesPerView: 1.6,
+      spaceBetween: 14,
     },
     768: {
       slidesPerView: "auto",
