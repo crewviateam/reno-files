@@ -314,28 +314,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const calcSec = activePane.querySelector(".app-calc-sec");
     const calcTarget = activePane.querySelector(".calc-tabs-wrap");
 
+    // Properties we override with !important when in calc.
+    // Using setProperty per-property means GSAP's OTHER inline styles survive.
+    const CALC_PROPS = {
+      position: "static",
+      transform: "none",
+      left: "auto",
+      bottom: "auto",
+      top: "auto",
+      right: "auto",
+      opacity: "1",
+      visibility: "visible"
+    };
+
     if (calcSec && calcTarget && tabMenuTrueParent) {
-      // Capture generation at init time — stale rAF callbacks from old
-      // init cycles will self-abort when initGeneration has moved on.
       const myGeneration = initGeneration;
       let rAFPending = false;
 
       const applyCalcState = () => {
         calcTarget.appendChild(tabMenu);
-        // Override GSAP inline styles using cssText with !important.
-        // Crucially we do NOT kill the tweens — they stay alive so that
-        // when the trigger is re-enabled on revert, GSAP can render the
-        // correct position immediately without needing invalidate().
-        tabMenu.style.cssText = [
-          "position: static !important",
-          "transform: none !important",
-          "left: auto !important",
-          "bottom: auto !important",
-          "top: auto !important",
-          "right: auto !important",
-          "opacity: 1 !important",
-          "visibility: visible !important"
-        ].join("; ") + ";";
+        // Override EACH property with !important individually.
+        // This does NOT clear GSAP's other inline style properties —
+        // they are preserved and will snap back correctly on revert.
+        Object.entries(CALC_PROPS).forEach(([prop, val]) => {
+          tabMenu.style.setProperty(prop, val, "important");
+        });
         tabMenu.classList.add("is-in-calc");
         tabMenu.classList.remove("choose-text", "blur-bg");
         if (tabTl.scrollTrigger) tabTl.scrollTrigger.disable(false);
@@ -343,16 +346,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const revertCalcState = () => {
         tabMenuTrueParent.appendChild(tabMenu);
-        // Clear the cssText override — GSAP's preserved inline styles
-        // (left, bottom, transform etc.) snap back instantly.
-        tabMenu.style.cssText = "";
+        // Remove ONLY the !important overrides — GSAP's inline styles
+        // for left/bottom/transform etc. snap back with zero lag.
+        Object.keys(CALC_PROPS).forEach(prop => {
+          tabMenu.style.removeProperty(prop);
+        });
         tabMenu.classList.remove("is-in-calc", "choose-text", "blur-bg");
         if (tabTl.scrollTrigger) {
+          // Force the timeline to immediately render at the correct scrub
+          // position BEFORE re-enabling, so there is no animated transition
+          // from a stale state (which caused the glitch/bounce).
+          const st = tabTl.scrollTrigger;
           tabTl.scrollTrigger.enable();
-          // update() re-renders at current scroll progress WITHOUT triggering
-          // a global refresh() cycle that would cause onRefresh to re-apply
-          // calc state (the glitch/flip-flop loop).
-          tabTl.scrollTrigger.update();
+          // Immediately seek to the scroll-position-mapped progress (no scrub lag)
+          const rawProg = Math.min(Math.max(
+            (window.scrollY - st.start) / (st.end - st.start), 0), 1);
+          tabTl.progress(rawProg, true);
         }
       };
 
@@ -367,8 +376,6 @@ document.addEventListener("DOMContentLoaded", () => {
           rAFPending = true;
           requestAnimationFrame(() => {
             rAFPending = false;
-            // Abort if a newer initAll() has run — prevents stale closures
-            // from disabling the new tabTl or wrongly reparenting the menu.
             if (initGeneration !== myGeneration) return;
             if (self.progress > 0) {
               applyCalcState();
@@ -380,6 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
+
 
 
 
