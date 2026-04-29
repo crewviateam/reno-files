@@ -1,6 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
   gsap.registerPlugin(ScrollTrigger);
 
+  // Store the true original parent of the tab menu ONCE so it's never
+  // incorrectly re-captured after a reparent (e.g. tab switch while in calc).
+  const tabMenuTrueParent = (() => {
+    const m = document.querySelector(".w-tab-menu");
+    return m ? m.parentElement : null;
+  })();
+
   // 1. UTILITIES (Idempotent AED sign logic)
   function setupAedSigns() {
     const elements = document.querySelectorAll(
@@ -279,6 +286,9 @@ document.addEventListener("DOMContentLoaded", () => {
     .to(tabMenu, { autoAlpha: 1, duration: 0.4, ease: "power2.out" });
     
     tabTl.eventCallback("onUpdate", () => {
+       // Do nothing if menu has been moved into the calc section
+       if (tabMenu.classList.contains("is-in-calc")) return;
+
        const progress = tabTl.progress();
        
        // Handle choose-text (Active between 30% and 80%)
@@ -295,7 +305,63 @@ document.addEventListener("DOMContentLoaded", () => {
           tabMenu.classList.remove("blur-bg");
        }
     });
+
+    // --- Reparenting Logic ---
+    const calcSec = activePane.querySelector(".app-calc-sec");
+    const calcTarget = activePane.querySelector(".calc-tabs-wrap");
+
+    if (calcSec && calcTarget && tabMenuTrueParent) {
+      // Guard: prevents multiple rapid refreshes (e.g. resize) from
+      // stacking duplicate requestAnimationFrame calls
+      let rAFPending = false;
+
+      const applyCalcState = () => {
+        calcTarget.appendChild(tabMenu);
+        gsap.killTweensOf(tabMenu);
+        tabMenu.setAttribute("style", "position: static !important; transform: none !important;");
+        tabMenu.classList.add("is-in-calc");
+        tabMenu.classList.remove("choose-text", "blur-bg");
+        if (tabTl.scrollTrigger) tabTl.scrollTrigger.disable(false);
+      };
+
+      // skipRefresh: prevents an infinite loop when called from inside onRefresh
+      const revertCalcState = (skipRefresh = false) => {
+        // Always restore to TRUE original parent, never a stale reparented one
+        tabMenuTrueParent.appendChild(tabMenu);
+        tabMenu.removeAttribute("style");
+        tabMenu.classList.remove("is-in-calc", "choose-text", "blur-bg");
+        if (tabTl.scrollTrigger) {
+          tabTl.scrollTrigger.enable();
+          tabTl.invalidate();
+          if (!skipRefresh) tabTl.scrollTrigger.refresh();
+        }
+      };
+
+      ScrollTrigger.create({
+        id: "menuReparentTrigger",
+        trigger: calcSec,
+        start: "top bottom",
+        onEnter: applyCalcState,
+        onLeaveBack: revertCalcState,
+        onRefresh(self) {
+          // Bail if a rAF is already queued — deduplicate rapid refresh calls
+          if (rAFPending) return;
+          rAFPending = true;
+          // Defer until AFTER the full refresh cycle so menuCenterTrigger
+          // can't overwrite the state we set here
+          requestAnimationFrame(() => {
+            rAFPending = false;
+            if (self.progress > 0) {
+              applyCalcState();
+            } else if (tabMenu.classList.contains("is-in-calc")) {
+              revertCalcState(true); // skip nested refresh to avoid loop
+            }
+          });
+        }
+      });
+    }
   }
+
 
   /* ----------------------------------
     4. PARTNER TRACK ANIMATION
@@ -487,6 +553,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- INITIALIZATION ---
   function initAll() {
     ScrollTrigger.getAll().forEach(st => st.kill());
+
+    // Before re-initializing, always reset the tab menu to its true original
+    // parent and clean state. This handles tab switches while the menu was
+    // reparented into the calc section — prevents stale parent bugs.
+    const tabMenu = document.querySelector(".w-tab-menu");
+    if (tabMenu && tabMenuTrueParent && tabMenu.parentElement !== tabMenuTrueParent) {
+      tabMenuTrueParent.appendChild(tabMenu);
+      tabMenu.removeAttribute("style");
+      tabMenu.classList.remove("is-in-calc", "choose-text", "blur-bg");
+    }
     
     const activePane = document.querySelector(".w-tab-pane.w--tab-active");
     if (activePane) {
