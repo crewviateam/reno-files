@@ -255,6 +255,19 @@ document.addEventListener("DOMContentLoaded", () => {
         end: "bottom top", 
         scrub: 0.5,
         invalidateOnRefresh: true,
+        onRefresh: (self) => {
+           const progress = self.progress;
+           if (progress > 0.3 && progress < 0.8) {
+              tabMenu.classList.add("choose-text");
+           } else {
+              tabMenu.classList.remove("choose-text");
+           }
+           if (progress >= 0.9) {
+              tabMenu.classList.add("blur-bg");
+           } else {
+              tabMenu.classList.remove("blur-bg");
+           }
+        }
       }
     });
 
