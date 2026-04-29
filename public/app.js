@@ -8,6 +8,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return m ? m.parentElement : null;
   })();
 
+  // Incremented on every initAll() call. Used to cancel stale rAF callbacks
+  // from a previous init cycle (e.g. pending onRefresh rAF after tab switch).
+  let initGeneration = 0;
+
   // 1. UTILITIES (Idempotent AED sign logic)
   function setupAedSigns() {
     const elements = document.querySelectorAll(
@@ -311,29 +315,44 @@ document.addEventListener("DOMContentLoaded", () => {
     const calcTarget = activePane.querySelector(".calc-tabs-wrap");
 
     if (calcSec && calcTarget && tabMenuTrueParent) {
-      // Guard: prevents multiple rapid refreshes (e.g. resize) from
-      // stacking duplicate requestAnimationFrame calls
+      // Capture generation at init time — stale rAF callbacks from old
+      // init cycles will self-abort when initGeneration has moved on.
+      const myGeneration = initGeneration;
       let rAFPending = false;
 
       const applyCalcState = () => {
         calcTarget.appendChild(tabMenu);
-        gsap.killTweensOf(tabMenu);
-        tabMenu.setAttribute("style", "position: static !important; transform: none !important;");
+        // Override GSAP inline styles using cssText with !important.
+        // Crucially we do NOT kill the tweens — they stay alive so that
+        // when the trigger is re-enabled on revert, GSAP can render the
+        // correct position immediately without needing invalidate().
+        tabMenu.style.cssText = [
+          "position: static !important",
+          "transform: none !important",
+          "left: auto !important",
+          "bottom: auto !important",
+          "top: auto !important",
+          "right: auto !important",
+          "opacity: 1 !important",
+          "visibility: visible !important"
+        ].join("; ") + ";";
         tabMenu.classList.add("is-in-calc");
         tabMenu.classList.remove("choose-text", "blur-bg");
         if (tabTl.scrollTrigger) tabTl.scrollTrigger.disable(false);
       };
 
-      // skipRefresh: prevents an infinite loop when called from inside onRefresh
-      const revertCalcState = (skipRefresh = false) => {
-        // Always restore to TRUE original parent, never a stale reparented one
+      const revertCalcState = () => {
         tabMenuTrueParent.appendChild(tabMenu);
-        tabMenu.removeAttribute("style");
+        // Clear the cssText override — GSAP's preserved inline styles
+        // (left, bottom, transform etc.) snap back instantly.
+        tabMenu.style.cssText = "";
         tabMenu.classList.remove("is-in-calc", "choose-text", "blur-bg");
         if (tabTl.scrollTrigger) {
           tabTl.scrollTrigger.enable();
-          tabTl.invalidate();
-          if (!skipRefresh) tabTl.scrollTrigger.refresh();
+          // update() re-renders at current scroll progress WITHOUT triggering
+          // a global refresh() cycle that would cause onRefresh to re-apply
+          // calc state (the glitch/flip-flop loop).
+          tabTl.scrollTrigger.update();
         }
       };
 
@@ -344,23 +363,24 @@ document.addEventListener("DOMContentLoaded", () => {
         onEnter: applyCalcState,
         onLeaveBack: revertCalcState,
         onRefresh(self) {
-          // Bail if a rAF is already queued — deduplicate rapid refresh calls
           if (rAFPending) return;
           rAFPending = true;
-          // Defer until AFTER the full refresh cycle so menuCenterTrigger
-          // can't overwrite the state we set here
           requestAnimationFrame(() => {
             rAFPending = false;
+            // Abort if a newer initAll() has run — prevents stale closures
+            // from disabling the new tabTl or wrongly reparenting the menu.
+            if (initGeneration !== myGeneration) return;
             if (self.progress > 0) {
               applyCalcState();
             } else if (tabMenu.classList.contains("is-in-calc")) {
-              revertCalcState(true); // skip nested refresh to avoid loop
+              revertCalcState();
             }
           });
         }
       });
     }
   }
+
 
 
   /* ----------------------------------
@@ -553,6 +573,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- INITIALIZATION ---
   function initAll() {
     ScrollTrigger.getAll().forEach(st => st.kill());
+
+    // Increment generation: any pending rAF from a previous init cycle
+    // will see initGeneration !== myGeneration and self-abort.
+    initGeneration++;
 
     // Before re-initializing, always reset the tab menu to its true original
     // parent and clean state. This handles tab switches while the menu was
