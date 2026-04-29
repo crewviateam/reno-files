@@ -68,7 +68,13 @@ const swiper = new Swiper(".ctr_industory_slider_wrap.swiper", {
   },
   on: {
     progress(swiper) {
-      const scaleStep = 0.175;
+      const isMobile = window.innerWidth <= 767;
+      // Mobile: smaller translate so adjacent cards peek in from sides (Figma match)
+      // Desktop: original values unchanged
+      const scaleStep = isMobile ? 0.1 : 0.175;
+      const translateMult = isMobile ? 18 : 40;
+      const opacityThreshold = isMobile ? 1.5 : 2.9;
+
       const zIndexMax = swiper.slides.length;
       for (let i = 0; i < swiper.slides.length; i += 1) {
         const slideEl = swiper.slides[i];
@@ -78,13 +84,13 @@ const swiper = new Swiper(".ctr_industory_slider_wrap.swiper", {
         if (absProgress > 1) {
           modify = (absProgress - 1) * 0.2 + 1;
         }
-        const translate = `${slideProgress * modify * 40}%`;
+        const translate = `${slideProgress * modify * translateMult}%`;
         const scale = 1 - absProgress * scaleStep;
         const zIndex = zIndexMax - Math.abs(Math.round(slideProgress));
         slideEl.style.transform = `translateX(${translate}) scale(${scale})`;
         slideEl.style.zIndex = zIndex;
 
-        if (absProgress > 2.9) {
+        if (absProgress > opacityThreshold) {
           slideEl.style.opacity = 0;
         } else {
           slideEl.style.opacity = 1;
