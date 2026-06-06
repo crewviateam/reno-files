@@ -605,7 +605,7 @@ function collabAnimation() {
         start: "10% top",
         end: "bottom bottom",
         scrub: 2,
-        markers: true,
+        markers: false,
         toggleClass: {
           targets: PaginationSlider,
           className: "active",
