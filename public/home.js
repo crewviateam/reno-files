@@ -418,7 +418,7 @@ function GallerySecAnimation() {
       ease: "power2.out",
     });
 
-    const xValue = isMobile ? "0%" : "-52.9715%";
+    const xValue = isMobile ? "0%" : "-50.9715%";
     const yValue = isMobile ? "-82.3026%" : "-50.9715%";
     const widthValue = isMobile ? "100vw" : "49.981vw";
 
