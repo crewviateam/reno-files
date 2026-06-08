@@ -418,7 +418,7 @@ function GallerySecAnimation() {
       ease: "power2.out",
     });
 
-    const xValue = isMobile ? "0%" : "-50.9715%";
+    const xValue = isMobile ? "0%" : "-49.9715%";
     const yValue = isMobile ? "-82.3026%" : "-50.9715%";
     const widthValue = isMobile ? "100vw" : "49.981vw";
 
@@ -439,7 +439,7 @@ function GallerySecAnimation() {
     const yValue2 = isMobile ? "-71.9715%" : "-54.9715%";
 
     galTl.to(animImage, {
-      width: "101vw",
+      width: "100vw",
       height: "110vh",
       y: yValue2,
       duration: 0.5,
