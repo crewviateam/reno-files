@@ -345,20 +345,6 @@ function GallerySecAnimation() {
 
     const isMobile = window.innerWidth <= 768;
 
-    // Safari detection — UA-based; excludes Chrome & Android which also carry "Safari"
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-    // Real available viewport width (clientWidth excludes scrollbar gutter).
-    // On macOS the overlay scrollbar is 0px, but on some Safari/iOS configs vw
-    // resolves against the layout viewport which can include the scrollbar gutter,
-    // causing a horizontal gap. Using clientWidth avoids this entirely.
-    const realVW = document.documentElement.clientWidth;
-    const scrollbarGap = window.innerWidth - realVW; // px, often 0 on macOS
-
-    // Expose as CSS variable so any CSS rule can also reference it
-    document.documentElement.style.setProperty('--scrollbar-width', scrollbarGap + 'px');
-    document.documentElement.style.setProperty('--real-vw', realVW + 'px');
-
     const galTl = gsap.timeline({
       scrollTrigger: {
         trigger: gallerySec,
@@ -452,18 +438,15 @@ function GallerySecAnimation() {
 
     const yValue2 = isMobile ? "-71.9715%" : "-54.9715%";
 
-    // On Safari use the real pixel width instead of 100vw to avoid
-    // the scrollbar-gutter discrepancy that leaves a left-side gap.
-    const fullScreenWidth = isSafari ? realVW + "px" : "100vw";
-
     galTl.to(animImage, {
-      width: fullScreenWidth,
+      width: "100vw",
       height: "110vh",
       y: yValue2,
       duration: 0.5,
       transformOrigin: "100% 100%",
       ease: "power2.out",
     });
+
 
     // for (let i = 0; i < images.length; i++) {
     //   if (i !== 20) {

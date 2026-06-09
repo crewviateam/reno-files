@@ -5,8 +5,10 @@
    Usage:  width: calc(100vw - var(--scrollbar-width));
            width: var(--real-vw);                          */
 :root {
-  --scrollbar-width: 0px;   /* real value set by JS: window.innerWidth - clientWidth */
-  --real-vw: 100vw;         /* real value set by JS: clientWidth in px               */
+    --scrollbar-width: 0px;
+    /* real value set by JS: window.innerWidth - clientWidth */
+    --real-vw: 100vw;
+    /* real value set by JS: clientWidth in px               */
 }
 
 [data-portfolio-orientation=horizontal] .p-carousal_marquee_list {
@@ -20,30 +22,39 @@
 .p-carousal_slide {
     transition: 0.3s ease-in-out;
 }
-@keyframes loopi{
-    0%{
+
+@keyframes loopi {
+    0% {
         transform: translateY(0%);
-    }ƒˇ
-    100%{
+    }
+
+    ƒˇ 100% {
         transform: translateY(-50%)
     }
 }
-.custom-main-input:focus ~ label, 
-.custom-main-input:user-valid ~ label, 
-.custom-main-input:not(:placeholder-shown) ~ label {
+
+.custom-main-input:focus~label,
+.custom-main-input:user-valid~label,
+.custom-main-input:not(:placeholder-shown)~label {
     transform: translateY(-130%);
     font-size: 14px;
 }
-.custom-main-input, .custom-main-input label, .custom-check-inner{
-    transition:all 0.3s ease-in-out !important;
+
+.custom-main-input,
+.custom-main-input label,
+.custom-check-inner {
+    transition: all 0.3s ease-in-out !important;
 }
-.custom-check-flield{
+
+.custom-check-flield {
     cursor: pointer;
 }
-.custom-check-flield input:checked ~ .custom-check-inner{
+
+.custom-check-flield input:checked~.custom-check-inner {
     background: white;
 }
-.custom-check-flield input:checked ~ .custom-check-inner span{
+
+.custom-check-flield input:checked~.custom-check-inner span {
     color: #1d1d1d;
 }
 
@@ -53,19 +64,21 @@ form#reno-form h3.title {
     display: none;
 }
 
-form#reno-form section{
+form#reno-form section {
     position: absolute;
-    
+
     display: block !important;
     visibility: hidden !important;
 }
-form#reno-form section.current{
+
+form#reno-form section.current {
     visibility: visible !important;
     position: relative;
     transition-delay: 0.3s !important;
 }
 
-.pl-step-form-container, .pl-step-form-container > div {
+.pl-step-form-container,
+.pl-step-form-container>div {
     height: 100%;
 }
 
@@ -98,7 +111,7 @@ form#reno-form section.current{
     align-items: center;
     justify-content: center;
     text-align: center;
-    background: rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.15);
     text-decoration: none;
 }
 
@@ -134,7 +147,7 @@ form#reno-form section.current{
 }
 
 #reno-form .actions.clearfix ul li.disabled a {
-    background: rgba(255,255,255,0.15) !important;
+    background: rgba(255, 255, 255, 0.15) !important;
     color: white;
 }
 
@@ -150,12 +163,14 @@ form#reno-form section.current{
 .custom-main-input.error {
     /* margin-bottom: 20px !important; */
     border: 1px solid red !important;
-    box-shadow: 0px 0px 0px 5px rgba(255 ,0 ,0, 0.25);
+    box-shadow: 0px 0px 0px 5px rgba(255, 0, 0, 0.25);
     background: #382e2e;
 }
+
 .custom-input label.error {
     display: none !important;
 }
+
 .iti__tel-input {
     width: 100% !important;
 }
@@ -167,6 +182,7 @@ form#reno-form section.current{
 .custom-input.country-phone-input .custom-label {
     display: none !important;
 }
+
 .iti__dropdown-content {
     background: #1d1d1d !important;
     border-radius: 12px !important;
@@ -176,16 +192,16 @@ form#reno-form section.current{
 /* modal */
 .modal {
     display: none;
-  }
-  
-  .modal.is-open {
+}
+
+.modal.is-open {
     display: block;
-  }
-  
+}
+
 .modal__overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.6);
+    background: rgba(0, 0, 0, .6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -193,17 +209,17 @@ form#reno-form section.current{
     padding-top: 20px;
     overflow-y: auto;
     overflow-x: hidden;
-  }
-  
-  .modal__container {
+}
+
+.modal__container {
     background: transparent;
     padding: 0px;
     max-width: 1200px;
     width: 95%;
     border-radius: 20px;
-  }
+}
 
-  a[data-micromodal-close] {
+a[data-micromodal-close] {
     width: 50px;
     height: 50px;
     display: flex;
@@ -220,36 +236,42 @@ form#reno-form section.current{
 .modal__container {
     position: relative;
 }
+
 .gallery-image-wrapper:nth-child(23) {
     z-index: 2;
     position: relative;
 }
-.designers_slide_img_track{
+
+.designers_slide_img_track {
     animation: loopY 5s infinite linear;
 }
-@keyframes loopY{
-    0%{
+
+@keyframes loopY {
+    0% {
         transform: translateY(0%);
     }
-    100%{
+
+    100% {
         transform: translateY(-50%)
     }
 }
+
 .swiper-slide {
     width: fit-content;
     flex-shrink: 0;
-  }
+}
 
-  .main-gallery-image-wrapper-animated {
+.main-gallery-image-wrapper-animated {
     position: absolute;
     z-index: 5;
     top: 0;
     height: 100%;
-    
+
     overflow: hidden;
     border-radius: 20px;
 }
-.main-gallery-image-wrapper-animated img{
+
+.main-gallery-image-wrapper-animated img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -262,51 +284,61 @@ form#reno-form section.current{
     overflow: unset;
 }
 
-.cta_visual_wrap> img:nth-child(2) {
+.cta_visual_wrap>img:nth-child(2) {
     transform: translateY(100px);
 }
-.cta_visual_wrap:hover > img:nth-child(2) {
+
+.cta_visual_wrap:hover>img:nth-child(2) {
     transform: translateY(5px);
 }
-.cta_visual_wrap:hover > img:nth-child(1) {
+
+.cta_visual_wrap:hover>img:nth-child(1) {
     transform: translateY(80px);
 }
-.cta_visual_wrap> img{
+
+.cta_visual_wrap>img {
     transition: 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
-.portfolio_list_img_iner> .portfolio_list_img_iner {
-    
+.portfolio_list_img_iner>.portfolio_list_img_iner {
+
     transform: translateY(0);
 }
-@keyframes loopscroll{
-    0%{
+
+@keyframes loopscroll {
+    0% {
         transform: translateY(0px);
     }
-     100%{
+
+    100% {
         transform: translateY(-30%);
     }
 }
 
-.two-col [data-portfolio-element=item]:hover .portfolio_list_img_iner> .portfolio_list_img_iner{
-    animation: loopscroll 3s infinite linear; 
+.two-col [data-portfolio-element=item]:hover .portfolio_list_img_iner>.portfolio_list_img_iner {
+    animation: loopscroll 3s infinite linear;
 }
-.two-col .experts_list_item:hover .vertical-marquee_inner{
-    animation: loopscroll 3s infinite linear; 
+
+.two-col .experts_list_item:hover .vertical-marquee_inner {
+    animation: loopscroll 3s infinite linear;
 }
-form#reno-form section:not(.current){
+
+form#reno-form section:not(.current) {
     top: 2em !important;
     left: 0px !important;
     opacity: 0 !important;
     width: 96.5% !important;
 }
-form#reno-form section{
+
+form#reno-form section {
     transition: 0.3s ease-in-out;
 }
-.home-gallery-hero-img{
+
+.home-gallery-hero-img {
     opacity: 0;
 }
-.home-gallery-hero-img img{
+
+.home-gallery-hero-img img {
     width: 100% !important;
     object-fit: cover !important;
     object-position: center !important;
@@ -315,22 +347,26 @@ form#reno-form section{
 
 .designer-pagination-slider-container .designer-pagination-image {
     transform: rotate(-90deg);
-    opacity:1 !important;
+    opacity: 1 !important;
 }
-.designer-pagination-slider-container{
+
+.designer-pagination-slider-container {
     top: 36vh;
     left: 50%;
     transform: translateX(-50%) rotate(90deg);
     z-index: 99;
 }
-.u-desktop-hide{
+
+.u-desktop-hide {
     display: none !important;
 }
+
 @media (max-width: 768px) {
-    .u-desktop-hide{
+    .u-desktop-hide {
         display: block !important;
     }
-    .u-mobile-hide{
+
+    .u-mobile-hide {
         display: none !important;
     }
 }
@@ -339,36 +375,45 @@ form#reno-form section{
     opacity: 0.6;
     transform: rotate(0) scale(0.7);
 }
-.designer-pagination-slider-container .swiper-slide{
+
+.designer-pagination-slider-container .swiper-slide {
     transition: 0.3s ease-in-out;
     cursor: pointer;
 }
-@media(max-width: 768px){
+
+@media(max-width: 768px) {
     .designer-pagination-slider-container {
-        top: 13em  !important;
+        top: 13em !important;
     }
-    .designer-slider-pagination-slider.swiper{
+
+    .designer-slider-pagination-slider.swiper {
         height: 320px !important;
     }
-    .designer-images-marquee-container{
+
+    .designer-images-marquee-container {
         animation: loopAnimRevrse 15s infinite linear !important;
         min-width: max-content !important;
     }
+
     .p-carousal_wrap {
         padding: 0px 10px;
     }
-    .p-carousal_slide.swiper-slide{
+
+    .p-carousal_slide.swiper-slide {
         max-width: 100% !important;
     }
-    .designer-images-marquee-main{
+
+    .designer-images-marquee-main {
         height: auto !important;
     }
 }
-@keyframes loopAnimRevrse{
-    0%{
+
+@keyframes loopAnimRevrse {
+    0% {
         transform: translateX(0%);
     }
-    100%{
+
+    100% {
         transform: translateX(-50%)
     }
 }
@@ -378,26 +423,27 @@ form#reno-form section{
 .nav_component.nav--hidden {
     transform: translateY(-100%);
     opacity: 0;
-  }
-  
-  /* visible state */
-  .nav_component.nav--visible {
+}
+
+/* visible state */
+.nav_component.nav--visible {
     transform: translateY(0);
     opacity: 1;
     background: black;
     position: fixed !important;
-  }
-  .nav_component.nav--visible .bottom_bottom_left_outer {
-    display: none !important;
-  }
+}
 
-  .nav_component {
+.nav_component.nav--visible .bottom_bottom_left_outer {
+    display: none !important;
+}
+
+.nav_component {
     width: 100%;
     transition: transform 0.35s ease, opacity 0.25s ease;
     will-change: transform;
-  }
+}
 
-  .v-tabs_accordion_item.is-opened .v-tabs_accordion_body {
+.v-tabs_accordion_item.is-opened .v-tabs_accordion_body {
     max-height: 1000px !important;
 }
 
@@ -406,15 +452,15 @@ form#reno-form section{
 }
 
 
-@media(max-width: 768px){
+@media(max-width: 768px) {
     .nav_elements .clickable_btn {
         background: white !important;
         color: black !important;
     }
-    
-    
+
+
     .nav_elements .button_main_text {
-         color: black !important;
+        color: black !important;
         z-index: 4 !important;
     }
 
@@ -423,15 +469,17 @@ form#reno-form section{
         animation: loopX 5s infinite linear !important;
         min-width: max-content;
     }
-    
+
     .designers_slide_img_container {
         flex-direction: row;
     }
+
     @keyframes loopX {
-        0%{
+        0% {
             transform: translateX(0px);
         }
-        100%{
+
+        100% {
             transform: translateX(-50%);
         }
     }
