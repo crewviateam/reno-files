@@ -443,7 +443,7 @@ function GallerySecAnimation() {
       height: "110vh",
       y: yValue2,
       duration: 0.5,
-      transformOrigin: "84% 100%",
+      transformOrigin: "100% 100%",
       ease: "power2.out",
     });
 
