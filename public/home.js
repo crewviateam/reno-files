@@ -345,6 +345,29 @@ function GallerySecAnimation() {
 
     const isMobile = window.innerWidth <= 768;
 
+    // Dynamic calculations to prevent subpixel gaps and viewport mismatch across browsers
+    const getTargetWidth1 = () => {
+      const isMobile = window.innerWidth <= 768;
+      return isMobile ? window.innerWidth : 0.49981 * window.innerWidth;
+    };
+
+    const getTargetX1 = () => {
+      const parentRect = animImage[0].parentElement.getBoundingClientRect();
+      const targetWidth = getTargetWidth1();
+      return (window.innerWidth - targetWidth) / 2 - parentRect.left;
+    };
+
+    const getTargetWidth2 = () => {
+      // 100vw with a 20px padding (10px on each side) to prevent subpixel gaps in Safari
+      return window.innerWidth + 20;
+    };
+
+    const getTargetX2 = () => {
+      const parentRect = animImage[0].parentElement.getBoundingClientRect();
+      // Shift left by parentRect.left + 10px overflow
+      return -parentRect.left - 10;
+    };
+
     const galTl = gsap.timeline({
       scrollTrigger: {
         trigger: gallerySec,
@@ -352,6 +375,7 @@ function GallerySecAnimation() {
         end: "bottom bottom",
         markers: false,
         scrub: 3,
+        invalidateOnRefresh: true, // Recalculate function-based values on resize/refresh
       },
     });
 
@@ -418,16 +442,14 @@ function GallerySecAnimation() {
       ease: "power2.out",
     });
 
-    const xValue = isMobile ? "0%" : "-50%";
     const yValue = isMobile ? "-82.3026%" : "-50.9715%";
-    const widthValue = isMobile ? "100vw" : "49.981vw";
 
     galTl.to(
       animImage,
       {
-        width: widthValue,
+        width: getTargetWidth1,
         height: "53.9896vH",
-        x: xValue,
+        x: getTargetX1,
         y: yValue,
         duration: 2,
         transformOrigin: "84% 100%",
@@ -439,8 +461,9 @@ function GallerySecAnimation() {
     const yValue2 = isMobile ? "-71.9715%" : "-54.9715%";
 
     galTl.to(animImage, {
-      width: "100vw",
+      width: getTargetWidth2,
       height: "110vh",
+      x: getTargetX2,
       y: yValue2,
       duration: 0.5,
       transformOrigin: "100% 100%",
