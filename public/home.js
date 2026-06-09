@@ -441,6 +441,7 @@ function GallerySecAnimation() {
     galTl.to(animImage, {
       width: "100vw",
       height: "110vh",
+      x: 0,
       y: yValue2,
       duration: 0.5,
       transformOrigin: "100% 100%",
