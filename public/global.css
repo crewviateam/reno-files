@@ -1,3 +1,14 @@
+/* ─── Viewport / Scrollbar width CSS variables ──────────────────────────
+   These are set to their real values by GallerySecAnimation() in home.js.
+   Defaults here keep CSS valid before JS runs (e.g. on Safari with overlay
+   scrollbars where scrollbarGap is 0 anyway).
+   Usage:  width: calc(100vw - var(--scrollbar-width));
+           width: var(--real-vw);                          */
+:root {
+  --scrollbar-width: 0px;   /* real value set by JS: window.innerWidth - clientWidth */
+  --real-vw: 100vw;         /* real value set by JS: clientWidth in px               */
+}
+
 [data-portfolio-orientation=horizontal] .p-carousal_marquee_list {
     animation: loopi 5s infinite linear;
 }
