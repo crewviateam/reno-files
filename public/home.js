@@ -439,7 +439,7 @@ function GallerySecAnimation() {
     const yValue2 = isMobile ? "-71.9715%" : "-54.9715%";
 
     galTl.to(animImage, {
-      width: "100vw",
+      width: "101vw",
       height: "110vh",
       y: yValue2,
       duration: 0.5,
